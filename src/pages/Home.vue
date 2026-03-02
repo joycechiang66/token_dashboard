@@ -95,37 +95,12 @@
             <div>
               <label class="block text-sm font-medium text-foreground mb-2">
                 選擇模型
-                <span v-if="selectedModels.length > 0" class="ml-1 text-primary">({{ selectedModels.length }} 個)</span>
               </label>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="model in availableModels"
-                  :key="model"
-                  @click="toggleModel(model)"
-                  :class="[
-                    'px-3 py-1 text-sm rounded-full border transition',
-                    selectedModels.includes(model)
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background text-foreground border-border hover:border-primary',
-                  ]"
-                >
-                  {{ model }}
-                </button>
-              </div>
-            </div>
-            <div class="flex gap-2">
-              <button
-                @click="selectAllModels"
-                class="px-3 py-2 text-sm bg-secondary text-foreground rounded-md hover:opacity-90 transition"
-              >
-                全選
-              </button>
-              <button
-                @click="clearModels"
-                class="px-3 py-2 text-sm bg-secondary text-foreground rounded-md hover:opacity-90 transition"
-              >
-                清除
-              </button>
+              <MultiSelectDropdown
+                v-model="selectedModels"
+                :options="availableModels"
+                placeholder="請選擇模型"
+              />
             </div>
           </div>
         </div>
@@ -326,6 +301,7 @@ import { exportCompanySummaryToCSV, downloadCSV } from '../utils/csvExport'
 import { exportElementToPDF } from '../utils/pdfExport'
 import TopBudgetAlert from '../components/TopBudgetAlert.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import MultiSelectDropdown from '../components/MultiSelectDropdown.vue'
 import { useChartTheme } from '../composables/useChartTheme'
 import type { TokenRecord, Department, Employee, DepartmentStats } from '../types'
 
