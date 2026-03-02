@@ -28,6 +28,7 @@ import BudgetSettingsModal from '@/components/BudgetSettingsModal';
 import { useBudget } from '@/contexts/BudgetContext';
 import { Settings } from 'lucide-react';
 import ModelCostAnalysis from '@/components/ModelCostAnalysis';
+import TopBudgetAlert from '@/components/TopBudgetAlert';
 
 export default function DepartmentOverview() {
   const [location, setLocation] = useLocation();
@@ -109,6 +110,54 @@ export default function DepartmentOverview() {
   // Get company budget and cost
   const companyBudget = getCompanyBudget();
   
+  // Generate budget alerts for top banner
+  const budgetAlerts = [];
+  const companyPercentage = companyBudget > 0 ? (companyCost / companyBudget) * 100 : 0;
+  if (companyPercentage >= 100) {
+    budgetAlerts.push({
+      type: 'critical' as const,
+      name: '公司整體預算',
+      currentCost: companyCost,
+      budgetLimit: companyBudget,
+      percentage: companyPercentage,
+    });
+  } else if (companyPercentage >= 80) {
+    budgetAlerts.push({
+      type: 'warning' as const,
+      name: '公司整體預算',
+      currentCost: companyCost,
+      budgetLimit: companyBudget,
+      percentage: companyPercentage,
+    });
+  }
+  
+  // Add department alerts
+  filteredDepartments.forEach((dept) => {
+    const deptCost = dept.filteredRecords.reduce((total, record) => {
+      return total + calculateModelCost(record.model, record.inputTokens, record.outputTokens);
+    }, 0);
+    const deptBudget = getDepartmentBudget(dept.id);
+    const deptPercentage = deptBudget > 0 ? (deptCost / deptBudget) * 100 : 0;
+    
+    if (deptPercentage >= 100) {
+      budgetAlerts.push({
+        type: 'critical' as const,
+        name: `${dept.name}部門`,
+        currentCost: deptCost,
+        budgetLimit: deptBudget,
+        percentage: deptPercentage,
+      });
+    } else if (deptPercentage >= 80) {
+      budgetAlerts.push({
+        type: 'warning' as const,
+        name: `${dept.name}部門`,
+        currentCost: deptCost,
+        budgetLimit: deptBudget,
+        percentage: deptPercentage,
+      });
+    }
+  });
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -134,7 +183,13 @@ export default function DepartmentOverview() {
       </header>
 
       <main className="container py-8">
-        {/* Budget Alerts */}
+        {/* Top Budget Alerts */}
+        {budgetAlerts.length > 0 && (
+          <div className="mb-8">
+            <TopBudgetAlert alerts={budgetAlerts} />
+          </div>
+        )}
+        {/* Budget Status Cards */}
         <div className="mb-12">
           <BudgetAlert
             name="公司整體預算"
