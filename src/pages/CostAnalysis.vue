@@ -11,7 +11,8 @@
               <p class="text-sm text-muted-foreground mt-1">詳細的成本統計和預算管理</p>
             </div>
           </div>
-          <div class="flex gap-2">
+          <div class="flex gap-2 items-center">
+            <ThemeToggle />
             <button
               @click="showBudgetModal = true"
               class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
@@ -244,23 +245,16 @@
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
         <h2 class="text-lg font-semibold text-foreground mb-6">模型成本佔比</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <!-- Pie chart (CSS) -->
+          <!-- Chart.js Doughnut -->
           <div class="flex items-center justify-center">
-            <div class="relative w-48 h-48">
-              <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
-                <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--secondary))" stroke-width="20" />
-                <circle
-                  v-for="(seg, i) in pieSegments"
-                  :key="i"
-                  cx="50" cy="50" r="40"
-                  fill="none"
-                  :stroke="seg.color"
-                  stroke-width="20"
-                  :stroke-dasharray="`${seg.dash} ${seg.gap}`"
-                  :stroke-dashoffset="-seg.offset"
-                />
-              </svg>
-              <div class="absolute inset-0 flex items-center justify-center">
+            <div class="relative w-56 h-56">
+              <Doughnut
+                v-if="doughnutChartData"
+                :data="doughnutChartData"
+                :options="doughnutChartOptions"
+                :key="doughnutChartKey"
+              />
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div class="text-center">
                   <p class="text-xs text-muted-foreground">總成本</p>
                   <p class="text-sm font-bold text-foreground">{{ formatCostCompact(companyCost) }}</p>
@@ -382,7 +376,7 @@
 
 <script setup lang="ts">
 import { computed, ref, reactive, watch } from 'vue'
-import { Bar, Line } from 'vue-chartjs'
+import { Bar, Line, Doughnut } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -390,21 +384,25 @@ import {
   BarElement,
   LineElement,
   PointElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
   Filler,
 } from 'chart.js'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler)
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, Filler)
 import { getMockData, filterRecordsByDateRange, filterRecordsByModels, getAvailableModels } from '../utils/mockData'
 import { calculateTotalCost, formatCostCompact, formatCost, calculateRecordCost } from '../utils/costCalculator'
 import { useBudgetStore } from '../stores/budgetStore'
 import { exportCostAnalysisToCSV, downloadCSV } from '../utils/csvExport'
 import { exportElementToPDF } from '../utils/pdfExport'
+import ThemeToggle from '../components/ThemeToggle.vue'
+import { useChartTheme } from '../composables/useChartTheme'
 import type { TokenRecord, Department, DepartmentStats } from '../types'
 
 const budgetStore = useBudgetStore()
+const { gridColor, textColor, tooltipBg } = useChartTheme()
 
 const data = ref(getMockData())
 const departments = ref<Department[]>(data.value.departments)
@@ -558,9 +556,11 @@ const trendChartOptions = computed(() => ({
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: 'rgba(0,0,0,0.8)',
+      backgroundColor: tooltipBg.value,
       titleFont: { size: 12 },
       bodyFont: { size: 12 },
+      titleColor: '#fff',
+      bodyColor: '#fff',
       padding: 10,
       cornerRadius: 6,
       callbacks: {
@@ -571,13 +571,14 @@ const trendChartOptions = computed(() => ({
   scales: {
     x: {
       grid: { display: false },
-      ticks: { maxRotation: 45, font: { size: 10 }, maxTicksLimit: 15 },
+      ticks: { maxRotation: 45, font: { size: 10 }, color: textColor.value, maxTicksLimit: 15 },
     },
     y: {
       beginAtZero: true,
-      grid: { color: 'rgba(0,0,0,0.06)' },
+      grid: { color: gridColor.value },
       ticks: {
         font: { size: 11 },
+        color: textColor.value,
         callback: (value: any) => `$${Number(value).toFixed(2)}`,
       },
     },
@@ -620,12 +621,14 @@ const budgetChartOptions = computed(() => ({
     legend: {
       display: true,
       position: 'bottom' as const,
-      labels: { usePointStyle: true, padding: 16, font: { size: 12 } },
+      labels: { usePointStyle: true, padding: 16, font: { size: 12 }, color: textColor.value },
     },
     tooltip: {
-      backgroundColor: 'rgba(0,0,0,0.8)',
+      backgroundColor: tooltipBg.value,
       titleFont: { size: 12 },
       bodyFont: { size: 12 },
+      titleColor: '#fff',
+      bodyColor: '#fff',
       padding: 10,
       cornerRadius: 6,
       callbacks: {
@@ -639,13 +642,14 @@ const budgetChartOptions = computed(() => ({
   scales: {
     x: {
       grid: { display: false },
-      ticks: { font: { size: 11 } },
+      ticks: { font: { size: 11 }, color: textColor.value },
     },
     y: {
       beginAtZero: true,
-      grid: { color: 'rgba(0,0,0,0.06)' },
+      grid: { color: gridColor.value },
       ticks: {
         font: { size: 11 },
+        color: textColor.value,
         callback: (value: any) => {
           const v = Number(value)
           return v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v}`
@@ -685,16 +689,52 @@ const modelStats = computed(() => {
     .sort((a, b) => b.cost - a.cost)
 })
 
-const circumference = 2 * Math.PI * 40 // r=40
-const pieSegments = computed(() => {
-  let offset = 0
-  return modelStats.value.map((model, i) => {
-    const dash = (model.percentage / 100) * circumference
-    const seg = { dash, gap: circumference - dash, offset, color: pieColors[i % pieColors.length] }
-    offset += dash
-    return seg
-  })
+// ========== Chart.js: Doughnut ==========
+const doughnutChartKey = ref(0)
+const doughnutChartData = computed(() => {
+  const stats = modelStats.value
+  return {
+    labels: stats.map((m) => m.name),
+    datasets: [
+      {
+        data: stats.map((m) => m.cost),
+        backgroundColor: stats.map((_, i) => pieColors[i % pieColors.length]),
+        borderColor: stats.map((_, i) => pieColors[i % pieColors.length]),
+        borderWidth: 2,
+        hoverOffset: 8,
+      },
+    ],
+  }
 })
+const doughnutChartOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: true,
+  cutout: '60%',
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: tooltipBg.value,
+      titleFont: { size: 12 },
+      bodyFont: { size: 12 },
+      titleColor: '#fff',
+      bodyColor: '#fff',
+      padding: 10,
+      cornerRadius: 6,
+      callbacks: {
+        label: (ctx: any) => {
+          const value = ctx.parsed
+          const total = ctx.dataset.data.reduce((a: number, b: number) => a + b, 0)
+          const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0'
+          return `${ctx.label}: $${value.toFixed(2)} (${pct}%)`
+        },
+      },
+    },
+  },
+}))
+
+watch([dateRange, selectedModels], () => {
+  doughnutChartKey.value++
+}, { deep: true })
 
 // Department cost ranking
 const deptCostRanking = computed(() => {

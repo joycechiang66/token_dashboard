@@ -9,7 +9,8 @@
             <h1 class="text-3xl font-bold text-foreground">{{ department?.name }}</h1>
             <p class="text-sm text-muted-foreground mt-1">{{ department?.description }}</p>
           </div>
-          <div class="flex gap-2">
+          <div class="flex gap-2 items-center">
+            <ThemeToggle />
             <button
               @click="exportDeptPDF"
               class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
@@ -253,6 +254,7 @@ import { calculateTotalCost, formatCostCompact, formatCost, calculateRecordCost 
 import { calculateEmployeeEfficiencies, getEfficiencyRating } from '../utils/efficiencyCalculator'
 import { exportDepartmentSummaryToCSV, exportEmployeeDetailsToCSV, downloadCSV } from '../utils/csvExport'
 import { exportElementToPDF } from '../utils/pdfExport'
+import ThemeToggle from '../components/ThemeToggle.vue'
 import type { TokenRecord, Department, DepartmentStats } from '../types'
 
 const route = useRoute()

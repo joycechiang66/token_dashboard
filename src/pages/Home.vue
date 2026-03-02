@@ -8,7 +8,8 @@
             <h1 class="text-3xl font-bold text-foreground">Token 使用量儀表板</h1>
             <p class="text-sm text-muted-foreground mt-1">公司內部 AI Token 消耗統計與分析</p>
           </div>
-          <div class="flex gap-2">
+          <div class="flex gap-2 items-center">
+            <ThemeToggle />
             <button
               @click="exportPDF"
               class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
@@ -161,6 +162,25 @@
         </div>
       </div>
 
+      <!-- Token Usage Trend Mini Chart -->
+      <div class="bg-card border border-border rounded-lg p-6 mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-foreground">篩選期間 Token 使用趨勢</h2>
+          <div class="flex gap-4 text-sm text-muted-foreground">
+            <span>總成本: <strong class="text-foreground">{{ formatCostCompact(companyCost) }}</strong></span>
+            <span>平均日成本: <strong class="text-foreground">${{ trendAvgCost.toFixed(2) }}</strong></span>
+          </div>
+        </div>
+        <div class="h-48">
+          <Line
+            v-if="trendChartData"
+            :data="trendChartData"
+            :options="trendChartOptions"
+            :key="trendChartKey"
+          />
+        </div>
+      </div>
+
       <!-- Efficiency Ranking -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
         <div class="flex items-center justify-between mb-6">
@@ -285,7 +305,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { Line } from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Filler,
+  Tooltip,
+} from 'chart.js'
+
+ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Filler, Tooltip)
 import { getMockData, filterRecordsByDateRange, filterRecordsByModels, getAvailableModels } from '../utils/mockData'
 import { calculateTotalCost, formatCostCompact } from '../utils/costCalculator'
 import { calculateDepartmentEfficiencies, getEfficiencyRating } from '../utils/efficiencyCalculator'
@@ -293,9 +325,12 @@ import { useBudgetStore } from '../stores/budgetStore'
 import { exportCompanySummaryToCSV, downloadCSV } from '../utils/csvExport'
 import { exportElementToPDF } from '../utils/pdfExport'
 import TopBudgetAlert from '../components/TopBudgetAlert.vue'
+import ThemeToggle from '../components/ThemeToggle.vue'
+import { useChartTheme } from '../composables/useChartTheme'
 import type { TokenRecord, Department, Employee, DepartmentStats } from '../types'
 
 const budgetStore = useBudgetStore()
+const { gridColor, textColor, tooltipBg } = useChartTheme()
 
 const data = ref(getMockData())
 const departments = ref<Department[]>(data.value.departments)
@@ -471,6 +506,94 @@ async function exportPDF() {
     isExportingPDF.value = false
   }
 }
+
+// ========== Mini Trend Chart ==========
+const trendChartKey = ref(0)
+const dailyTrend = computed(() => {
+  const startDate = new Date(dateRange.value.startDate)
+  const endDate = new Date(dateRange.value.endDate)
+  const diffDays = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+  const totalDays = Math.max(diffDays, 1)
+  const days: Array<{ date: string; cost: number; tokens: number }> = []
+  for (let i = 0; i <= totalDays; i++) {
+    const d = new Date(startDate)
+    d.setDate(d.getDate() + i)
+    const dateStr = d.toISOString().split('T')[0]
+    const dayRecords = filteredRecords.value.filter((r) => r.date === dateStr)
+    days.push({
+      date: dateStr.slice(5),
+      cost: calculateTotalCost(dayRecords),
+      tokens: dayRecords.reduce((s, r) => s + r.inputTokens + r.outputTokens, 0),
+    })
+  }
+  return days
+})
+
+const trendAvgCost = computed(() => {
+  const days = dailyTrend.value
+  return days.length > 0 ? days.reduce((s, d) => s + d.cost, 0) / days.length : 0
+})
+
+const trendChartData = computed(() => {
+  const data = dailyTrend.value
+  return {
+    labels: data.map((d) => d.date),
+    datasets: [
+      {
+        label: '日成本 (USD)',
+        data: data.map((d) => d.cost),
+        borderColor: 'rgba(59, 130, 246, 1)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 2,
+        pointRadius: data.length > 20 ? 0 : 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+        fill: true,
+        tension: 0.3,
+      },
+    ],
+  }
+})
+
+const trendChartOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: { mode: 'index' as const, intersect: false },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: tooltipBg.value,
+      titleFont: { size: 11 },
+      bodyFont: { size: 11 },
+      titleColor: '#fff',
+      bodyColor: '#fff',
+      padding: 8,
+      cornerRadius: 6,
+      callbacks: {
+        label: (ctx: any) => `成本: $${ctx.parsed.y.toFixed(2)}`,
+      },
+    },
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: { maxRotation: 0, font: { size: 10 }, color: textColor.value, maxTicksLimit: 10 },
+    },
+    y: {
+      beginAtZero: true,
+      grid: { color: gridColor.value },
+      ticks: {
+        font: { size: 10 },
+        color: textColor.value,
+        callback: (value: any) => `$${Number(value).toFixed(2)}`,
+      },
+    },
+  },
+}))
+
+watch([dateRange, selectedModels], () => {
+  trendChartKey.value++
+}, { deep: true })
 
 function formatNumber(num: number): string {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
