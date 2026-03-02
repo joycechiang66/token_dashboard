@@ -198,3 +198,58 @@ export function calculatePercentage(value: number, total: number): number {
   if (total === 0) return 0;
   return Math.round((value / total) * 100 * 100) / 100;
 }
+
+// Filter token records by date range
+export function filterRecordsByDateRange(
+  records: TokenRecord[],
+  startDate: string,
+  endDate: string
+): TokenRecord[] {
+  return records.filter((record) => {
+    return record.date >= startDate && record.date <= endDate;
+  });
+}
+
+// Calculate stats from filtered records
+export function calculateStatsFromRecords(records: TokenRecord[]) {
+  const totalInputTokens = records.reduce((sum, r) => sum + r.inputTokens, 0);
+  const totalOutputTokens = records.reduce((sum, r) => sum + r.outputTokens, 0);
+  const totalTokens = totalInputTokens + totalOutputTokens;
+
+  // Group by model
+  const modelStats = records.reduce(
+    (acc, record) => {
+      if (!acc[record.model]) {
+        acc[record.model] = {
+          model: record.model,
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          count: 0,
+        };
+      }
+      acc[record.model].inputTokens += record.inputTokens;
+      acc[record.model].outputTokens += record.outputTokens;
+      acc[record.model].totalTokens += record.totalTokens;
+      acc[record.model].count += 1;
+      return acc;
+    },
+    {} as Record<
+      string,
+      {
+        model: string;
+        inputTokens: number;
+        outputTokens: number;
+        totalTokens: number;
+        count: number;
+      }
+    >
+  );
+
+  return {
+    totalInputTokens,
+    totalOutputTokens,
+    totalTokens,
+    modelStats: Object.values(modelStats).sort((a, b) => b.totalTokens - a.totalTokens),
+  };
+}

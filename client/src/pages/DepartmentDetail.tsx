@@ -10,15 +10,28 @@
 
 import { useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
-import { getDepartmentById, formatTokens, calculatePercentage } from '@/lib/mockData';
+import { getDepartmentById, formatTokens, calculatePercentage, filterRecordsByDateRange, calculateStatsFromRecords } from '@/lib/mockData';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Users, TrendingUp } from 'lucide-react';
+import DateRangeFilter, { DateRange } from '@/components/DateRangeFilter';
 
 export default function DepartmentDetail() {
   const [location, setLocation] = useLocation();
   const [match, params] = useRoute('/department/:id');
   const [expandedEmployeeId, setExpandedEmployeeId] = useState<string | null>(null);
+  
+  // Date range state
+  const today = new Date();
+  const defaultEndDate = today.toISOString().split('T')[0];
+  const defaultStartDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split('T')[0];
+  
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: defaultStartDate,
+    endDate: defaultEndDate,
+  });
 
   const departmentId = params?.id as string;
   const department = getDepartmentById(departmentId);
@@ -34,8 +47,31 @@ export default function DepartmentDetail() {
     );
   }
 
+  // Filter and calculate stats based on date range
+  const filteredEmployees = department.employees.map((employee) => {
+    const filteredRecords = filterRecordsByDateRange(
+      employee.tokenRecords,
+      dateRange.startDate,
+      dateRange.endDate
+    );
+    const stats = calculateStatsFromRecords(filteredRecords);
+    return {
+      ...employee,
+      filteredRecords,
+      totalInputTokens: stats.totalInputTokens,
+      totalOutputTokens: stats.totalOutputTokens,
+      totalTokens: stats.totalTokens,
+    };
+  });
+
+  // Calculate department stats from filtered records
+  const departmentFilteredRecords = department.employees.flatMap((emp) =>
+    filterRecordsByDateRange(emp.tokenRecords, dateRange.startDate, dateRange.endDate)
+  );
+  const departmentStats = calculateStatsFromRecords(departmentFilteredRecords);
+
   // Sort employees by total tokens (descending)
-  const sortedEmployees = [...department.employees].sort((a, b) => b.totalTokens - a.totalTokens);
+  const sortedEmployees = [...filteredEmployees].sort((a, b) => b.totalTokens - a.totalTokens);
 
   return (
     <div className="min-h-screen bg-background">
@@ -62,7 +98,14 @@ export default function DepartmentDetail() {
       <main className="container py-8">
         {/* Department Statistics */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-foreground mb-6">部門統計</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-foreground">部門統計</h2>
+            <DateRangeFilter
+              onDateRangeChange={setDateRange}
+              initialStartDate={dateRange.startDate}
+              initialEndDate={dateRange.endDate}
+            />
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Total Tokens */}
@@ -70,7 +113,7 @@ export default function DepartmentDetail() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">總 Token 使用量</p>
-                  <p className="text-3xl font-bold text-foreground">{formatTokens(department.totalTokens)}</p>
+                  <p className="text-3xl font-bold text-foreground">{formatTokens(departmentStats.totalTokens)}</p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-primary" />
@@ -81,18 +124,18 @@ export default function DepartmentDetail() {
             {/* Input Tokens */}
             <Card className="p-6 border border-border bg-card">
               <p className="text-sm font-medium text-muted-foreground mb-2">輸入 Token</p>
-              <p className="text-3xl font-bold text-foreground">{formatTokens(department.totalInputTokens)}</p>
+              <p className="text-3xl font-bold text-foreground">{formatTokens(departmentStats.totalInputTokens)}</p>
               <p className="text-xs text-muted-foreground mt-2">
-                {calculatePercentage(department.totalInputTokens, department.totalTokens)}% 佔比
+                {calculatePercentage(departmentStats.totalInputTokens, departmentStats.totalTokens)}% 佔比
               </p>
             </Card>
 
             {/* Output Tokens */}
             <Card className="p-6 border border-border bg-card">
               <p className="text-sm font-medium text-muted-foreground mb-2">輸出 Token</p>
-              <p className="text-3xl font-bold text-foreground">{formatTokens(department.totalOutputTokens)}</p>
+              <p className="text-3xl font-bold text-foreground">{formatTokens(departmentStats.totalOutputTokens)}</p>
               <p className="text-xs text-muted-foreground mt-2">
-                {calculatePercentage(department.totalOutputTokens, department.totalTokens)}% 佔比
+                {calculatePercentage(departmentStats.totalOutputTokens, departmentStats.totalTokens)}% 佔比
               </p>
             </Card>
           </div>
@@ -138,7 +181,7 @@ export default function DepartmentDetail() {
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">佔比</p>
                           <p className="font-semibold text-primary">
-                            {calculatePercentage(employee.totalTokens, department.totalTokens)}%
+                            {departmentStats.totalTokens > 0 ? calculatePercentage(employee.totalTokens, departmentStats.totalTokens) : 0}%
                           </p>
                         </div>
                       </div>
@@ -149,7 +192,7 @@ export default function DepartmentDetail() {
                           <div 
                             className="h-full bg-primary rounded-full transition-all"
                             style={{
-                              width: `${calculatePercentage(employee.totalTokens, department.totalTokens)}%`
+                              width: departmentStats.totalTokens > 0 ? `${calculatePercentage(employee.totalTokens, departmentStats.totalTokens)}%` : '0%'
                             }}
                           />
                         </div>
@@ -167,49 +210,54 @@ export default function DepartmentDetail() {
                 {/* Expanded Details - Token Records */}
                 {expandedEmployeeId === employee.id && (
                   <div className="mt-4 ml-4 space-y-3 animate-in fade-in-50 duration-200">
-                    <div className="text-sm font-semibold text-foreground mb-4">最近使用記錄</div>
+                    <div className="text-sm font-semibold text-foreground mb-4">使用記錄 ({employee.filteredRecords.length} 筆)</div>
                     
-                    {employee.tokenRecords.slice(0, 10).map((record) => (
-                      <Card 
-                        key={record.id}
-                        className="p-4 border border-border/50 bg-secondary/30"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div>
-                            <p className="font-medium text-foreground">{record.model}</p>
-                            <p className="text-xs text-muted-foreground">{record.date}</p>
+                    {employee.filteredRecords.length > 0 ? (
+                      employee.filteredRecords.slice(0, 10).map((record) => (
+                        <Card 
+                          key={record.id}
+                          className="p-4 border border-border/50 bg-secondary/30"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <p className="font-medium text-foreground">{record.model}</p>
+                              <p className="text-xs text-muted-foreground">{record.date}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-foreground">{formatTokens(record.totalTokens)}</p>
+                              <p className="text-xs text-muted-foreground">
+                                ↓ {formatTokens(record.inputTokens)} | ↑ {formatTokens(record.outputTokens)}
+                              </p>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <p className="font-semibold text-foreground">{formatTokens(record.totalTokens)}</p>
-                            <p className="text-xs text-muted-foreground">
-                              ↓ {formatTokens(record.inputTokens)} | ↑ {formatTokens(record.outputTokens)}
-                            </p>
+                          
+                          {/* Token breakdown bar */}
+                          <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-secondary">
+                            <div 
+                              className="bg-blue-500 rounded-full"
+                              style={{
+                                width: `${calculatePercentage(record.inputTokens, record.totalTokens)}%`
+                              }}
+                              title={`輸入: ${formatTokens(record.inputTokens)}`}
+                            />
+                            <div 
+                              className="bg-green-500 rounded-full"
+                              style={{
+                                width: `${calculatePercentage(record.outputTokens, record.totalTokens)}%`
+                              }}
+                              title={`輸出: ${formatTokens(record.outputTokens)}`}
+                            />
                           </div>
-                        </div>
-                        
-                        {/* Token breakdown bar */}
-                        <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-secondary">
-                          <div 
-                            className="bg-blue-500 rounded-full"
-                            style={{
-                              width: `${calculatePercentage(record.inputTokens, record.totalTokens)}%`
-                            }}
-                            title={`輸入: ${formatTokens(record.inputTokens)}`}
-                          />
-                          <div 
-                            className="bg-green-500 rounded-full"
-                            style={{
-                              width: `${calculatePercentage(record.outputTokens, record.totalTokens)}%`
-                            }}
-                            title={`輸出: ${formatTokens(record.outputTokens)}`}
-                          />
-                        </div>
-                      </Card>
-                    ))}
-
-                    {employee.tokenRecords.length > 10 && (
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="text-center py-6">
+                        <p className="text-sm text-muted-foreground">該時間段內無使用記錄</p>
+                      </div>
+                    )}
+                    {employee.filteredRecords.length > 10 && (
                       <p className="text-xs text-muted-foreground text-center py-2">
-                        還有 {employee.tokenRecords.length - 10} 筆記錄
+                        還有 {employee.filteredRecords.length - 10} 筆記錄
                       </p>
                     )}
                   </div>
