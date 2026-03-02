@@ -143,102 +143,97 @@
           <div
             v-for="(emp, index) in employeeEfficiencyRanking"
             :key="emp.id"
-            class="flex items-center gap-4 p-4 bg-secondary rounded-lg cursor-pointer hover:bg-accent transition"
-            @click="toggleEmployeeExpanded(emp.id)"
+            class="bg-secondary rounded-lg overflow-hidden"
           >
-            <span
-              :class="[
-                'text-sm font-bold w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0',
-                index === 0 ? 'bg-yellow-400 text-yellow-900' :
-                index === 1 ? 'bg-gray-300 text-gray-700' :
-                index === 2 ? 'bg-amber-600 text-white' :
-                'bg-muted text-muted-foreground',
-              ]"
+            <!-- Employee Summary Row -->
+            <div 
+              class="flex items-center gap-4 p-4 cursor-pointer hover:bg-accent transition"
+              @click="toggleEmployeeExpanded(emp.id)"
             >
-              {{ index + 1 }}
-            </span>
-            <div class="flex-1">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-medium text-foreground">{{ emp.name }}</span>
-                <div class="flex items-center gap-3">
-                  <span class="text-sm text-muted-foreground">{{ formatNumber(emp.totalTokens) }} tokens</span>
-                  <span class="text-sm text-muted-foreground">{{ formatCostCompact(emp.cost) }}</span>
-                  <span class="text-sm font-medium text-foreground">{{ emp.efficiency.toFixed(0) }} T/$</span>
-                  <span
-                    :class="[
-                      'px-2 py-0.5 rounded text-xs font-medium',
-                      emp.rating === '高效'
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : emp.rating === '低效'
-                          ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                    ]"
-                  >
-                    {{ emp.rating }}
-                  </span>
-                  <span class="text-muted-foreground text-sm">{{ expandedEmployees.has(emp.id) ? '▲' : '▼' }}</span>
+              <span
+                :class="[
+                  'text-sm font-bold w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0',
+                  index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                  index === 1 ? 'bg-gray-300 text-gray-700' :
+                  index === 2 ? 'bg-amber-600 text-white' :
+                  'bg-muted text-muted-foreground',
+                ]"
+              >
+                {{ index + 1 }}
+              </span>
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-medium text-foreground">{{ emp.name }}</span>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm text-muted-foreground">{{ formatNumber(emp.totalTokens) }} tokens</span>
+                    <span class="text-sm text-muted-foreground">{{ formatCostCompact(emp.cost) }}</span>
+                    <span class="text-sm font-medium text-foreground">{{ emp.efficiency.toFixed(0) }} T/$</span>
+                    <span
+                      :class="[
+                        'px-2 py-0.5 rounded text-xs font-medium',
+                        emp.rating === '高效'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          : emp.rating === '低效'
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                      ]"
+                    >
+                      {{ emp.rating }}
+                    </span>
+                    <span class="text-muted-foreground text-sm transition-transform duration-200" :class="{ 'rotate-180': expandedEmployees.has(emp.id) }">▼</span>
+                  </div>
+                </div>
+                <div class="w-full bg-muted rounded-full h-1.5">
+                  <div
+                    class="bg-primary h-1.5 rounded-full transition-all"
+                    :style="{ width: Math.min((emp.efficiency / maxEmployeeEfficiency) * 100, 100) + '%' }"
+                  />
                 </div>
               </div>
-              <div class="w-full bg-muted rounded-full h-1.5">
-                <div
-                  class="bg-primary h-1.5 rounded-full transition-all"
-                  :style="{ width: Math.min((emp.efficiency / maxEmployeeEfficiency) * 100, 100) + '%' }"
-                />
+            </div>
+
+            <!-- Expanded Details -->
+            <div v-show="expandedEmployees.has(emp.id)" class="border-t border-border bg-card/50 p-4 animate-in slide-in-from-top-2 duration-200">
+              <div class="flex items-center justify-between mb-4">
+                <h4 class="text-sm font-semibold text-foreground">詳細使用記錄 ({{ (employeeRecords.get(emp.id) || []).length }} 筆)</h4>
+                <button
+                  @click.stop="exportEmployeeCSV(emp.id, emp.name)"
+                  class="px-2 py-1 bg-primary text-primary-foreground rounded text-xs hover:opacity-90 transition"
+                >
+                  匯出 CSV
+                </button>
+              </div>
+              
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-border/50">
+                      <th class="text-left py-2 px-3 text-xs font-medium text-muted-foreground">日期</th>
+                      <th class="text-left py-2 px-3 text-xs font-medium text-muted-foreground">模型</th>
+                      <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">輸入 Token</th>
+                      <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">輸出 Token</th>
+                      <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">成本</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="record in employeeRecords.get(emp.id) || []"
+                      :key="record.id"
+                      class="border-b border-border/50 hover:bg-muted/50 transition last:border-0"
+                    >
+                      <td class="py-2 px-3 text-foreground">{{ record.date }}</td>
+                      <td class="py-2 px-3 text-foreground">{{ record.model }}</td>
+                      <td class="text-right py-2 px-3 text-foreground">{{ formatNumber(record.inputTokens) }}</td>
+                      <td class="text-right py-2 px-3 text-foreground">{{ formatNumber(record.outputTokens) }}</td>
+                      <td class="text-right py-2 px-3 text-foreground">{{ formatCost(calculateRecordCost(record)) }}</td>
+                    </tr>
+                    <tr v-if="(employeeRecords.get(emp.id) || []).length === 0">
+                      <td colspan="5" class="py-4 text-center text-muted-foreground text-xs">此篩選條件下無記錄</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Employee Details (expanded) -->
-      <div class="space-y-4">
-        <div
-          v-for="emp in employeeEfficiencyRanking"
-          v-show="expandedEmployees.has(emp.id)"
-          :key="`details-${emp.id}`"
-          class="bg-card border border-border rounded-lg p-6"
-        >
-          <div class="flex items-center justify-between mb-6">
-            <div>
-              <h3 class="text-lg font-semibold text-foreground">{{ emp.name }} - 詳細記錄</h3>
-              <p class="text-sm text-muted-foreground">{{ (employeeRecords.get(emp.id) || []).length }} 筆記錄</p>
-            </div>
-            <button
-              @click.stop="exportEmployeeCSV(emp.id, emp.name)"
-              class="px-3 py-1 bg-primary text-primary-foreground rounded text-sm hover:opacity-90 transition"
-            >
-              匯出 CSV
-            </button>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b border-border">
-                  <th class="text-left py-2 px-4 font-semibold text-foreground">日期</th>
-                  <th class="text-left py-2 px-4 font-semibold text-foreground">模型</th>
-                  <th class="text-right py-2 px-4 font-semibold text-foreground">輸入 Token</th>
-                  <th class="text-right py-2 px-4 font-semibold text-foreground">輸出 Token</th>
-                  <th class="text-right py-2 px-4 font-semibold text-foreground">預估成本</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="record in employeeRecords.get(emp.id) || []"
-                  :key="record.id"
-                  class="border-b border-border hover:bg-secondary transition"
-                >
-                  <td class="py-2 px-4 text-muted-foreground">{{ record.date }}</td>
-                  <td class="py-2 px-4 text-foreground">{{ record.model }}</td>
-                  <td class="text-right py-2 px-4 text-foreground">{{ formatNumber(record.inputTokens) }}</td>
-                  <td class="text-right py-2 px-4 text-foreground">{{ formatNumber(record.outputTokens) }}</td>
-                  <td class="text-right py-2 px-4 text-foreground">{{ formatCost(calculateRecordCost(record)) }}</td>
-                </tr>
-                <tr v-if="(employeeRecords.get(emp.id) || []).length === 0">
-                  <td colspan="5" class="py-8 text-center text-muted-foreground">此篩選條件下無記錄</td>
-                </tr>
-              </tbody>
-            </table>
           </div>
         </div>
       </div>
