@@ -8,25 +8,6 @@ const departments: Department[] = [
   { id: 'dept-5', name: '人力資源部', description: '負責人力資源管理' },
 ]
 
-const employees: Employee[] = [
-  { id: 'emp-1', name: '張明', departmentId: 'dept-1' },
-  { id: 'emp-2', name: '李華', departmentId: 'dept-1' },
-  { id: 'emp-3', name: '王芳', departmentId: 'dept-1' },
-  { id: 'emp-4', name: '劉強', departmentId: 'dept-2' },
-  { id: 'emp-5', name: '陳麗', departmentId: 'dept-2' },
-  { id: 'emp-6', name: '楊帆', departmentId: 'dept-2' },
-  { id: 'emp-7', name: '周紅', departmentId: 'dept-2' },
-  { id: 'emp-8', name: '吳剛', departmentId: 'dept-3' },
-  { id: 'emp-9', name: '徐靜', departmentId: 'dept-3' },
-  { id: 'emp-10', name: '何敏', departmentId: 'dept-4' },
-  { id: 'emp-11', name: '馬超', departmentId: 'dept-4' },
-  { id: 'emp-12', name: '鄒偉', departmentId: 'dept-4' },
-  { id: 'emp-13', name: '葉青', departmentId: 'dept-5' },
-  { id: 'emp-14', name: '龔娟', departmentId: 'dept-5' },
-]
-
-const models = ['GPT-4', 'Claude', 'Gemini', 'GPT-3.5', 'Llama-2', 'Mistral', 'Qwen', 'Yi']
-
 // 使用固定種子的偽隨機數生成器，確保每次載入資料一致
 function seededRandom(seed: number): () => number {
   let s = seed
@@ -35,6 +16,36 @@ function seededRandom(seed: number): () => number {
     return (s >>> 0) / 0xffffffff
   }
 }
+
+// 100 名員工，分配：產品開發部 25 人、數據科學部 25 人、運營部 20 人、市場部 18 人、人力資源部 12 人
+const surnames = ['張','李','王','劉','陳','楊','周','吳','徐','何','馬','鄒','葉','龔','趙','孫','朱','高','林','郭','羅','梁','宋','鄭','謝','韓','唐','馮','董','蕭','程','曹','袁','鄧','許','傅','沈','曾','彭','呂','蘇','盧','蔣','蔡','賈','丁','魏','薛','葉','閻','余','潘','杜','戴','夏','鍾','汪','田','任','姜','范','方','石','姚','譚','廖','鄒','熊','金','陸','郝','孔','白','崔','康','毛','邱','秦','江','史','顧','侯','邵','孟','龍','萬','段','雷','錢','湯','尹','黎','易','常','武','喬','賀','賴','龔']
+const givenNames = ['明','華','芳','強','麗','帆','紅','剛','靜','敏','超','偉','青','娟','磊','洋','霞','軍','秀','傑','濤','燕','鑫','玲','浩','琳','宇','雪','峰','婷','博','瑩','鵬','慧','飛','嘉','凱','欣','昊','萍','睿','蕾','毅','穎','翔','璐','晨','彤','晗','妍','辰','瑜','澤','楠','琪','旭','蓉','寧','菲','威','潔','暢','晶','錦','恆','萌','智','悅','冰','皓','晴','逸','彬','韻','楓','瀚','蕊','琦','朗','熙']
+
+function generateEmployees(): Employee[] {
+  const deptAlloc = [
+    { deptId: 'dept-1', count: 25 },
+    { deptId: 'dept-2', count: 25 },
+    { deptId: 'dept-3', count: 20 },
+    { deptId: 'dept-4', count: 18 },
+    { deptId: 'dept-5', count: 12 },
+  ]
+  const emps: Employee[] = []
+  const rng = seededRandom(123)
+  let idx = 1
+  for (const { deptId, count } of deptAlloc) {
+    for (let i = 0; i < count; i++) {
+      const sn = surnames[Math.floor(rng() * surnames.length)]
+      const gn = givenNames[Math.floor(rng() * givenNames.length)]
+      emps.push({ id: `emp-${idx}`, name: `${sn}${gn}`, departmentId: deptId })
+      idx++
+    }
+  }
+  return emps
+}
+
+const employees: Employee[] = generateEmployees()
+
+const models = ['GPT-4', 'Claude', 'Gemini', 'GPT-3.5', 'Llama-2', 'Mistral', 'Qwen', 'Yi']
 
 let cachedRecords: TokenRecord[] | null = null
 
