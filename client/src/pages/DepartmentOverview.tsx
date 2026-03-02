@@ -19,7 +19,6 @@ import ModelFilter from '@/components/ModelFilter';
 import ExportButton from '@/components/ExportButton';
 import { exportDepartmentSummaryCSV } from '@/lib/csvExport';
 import { calculateModelCost, formatCostCompact } from '@/lib/costCalculator';
-import CostTrendChart from '@/components/CostTrendChart';
 import { TokenRecord } from '@/lib/mockData';
 import EfficiencyRanking from '@/components/EfficiencyRanking';
 import { Department, Employee } from '@/lib/mockData';
@@ -27,9 +26,7 @@ import BudgetAlert from '@/components/BudgetAlert';
 import BudgetSettingsModal from '@/components/BudgetSettingsModal';
 import { useBudget } from '@/contexts/BudgetContext';
 import { Settings } from 'lucide-react';
-import ModelCostAnalysis from '@/components/ModelCostAnalysis';
 import TopBudgetAlert from '@/components/TopBudgetAlert';
-import BudgetHistoryChart from '@/components/BudgetHistoryChart';
 
 export default function DepartmentOverview() {
   const [location, setLocation] = useLocation();
@@ -339,19 +336,23 @@ export default function DepartmentOverview() {
           </div>
         </div>
 
-        {/* Cost Trend Chart */}
+        {/* Cost Analysis Link */}
         <div className="mb-12">
-          <CostTrendChart records={trendChartRecords} title="過去 30 天成本趨勢" height={350} />
-        </div>
-
-        {/* Model Cost Analysis */}
-        <div className="mb-12">
-          <ModelCostAnalysis records={companyFilteredRecords} title="公司模型成本分析" />
-        </div>
-
-        {/* Budget History Chart */}
-        <div className="mb-12">
-          <BudgetHistoryChart title="預算使用歷史趨勢" height={400} />
+          <Card className="p-6 border border-primary/20 bg-primary/5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">深入成本分析</h3>
+                <p className="text-sm text-muted-foreground">查看詳細的成本趨勢、模型分析和預算歷史</p>
+              </div>
+              <Button
+                onClick={() => setLocation('/cost-analysis')}
+                className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <BarChart3 className="w-4 h-4" />
+                前往分析
+              </Button>
+            </div>
+          </Card>
         </div>
 
         {/* Department Efficiency Ranking */}

@@ -8,12 +8,14 @@ import { BudgetProvider } from "./contexts/BudgetContext";
 import { BudgetHistoryProvider } from "./contexts/BudgetHistoryContext";
 import DepartmentOverview from "./pages/DepartmentOverview";
 import DepartmentDetail from "./pages/DepartmentDetail";
+import CostAnalysis from "./pages/CostAnalysis";
 
 function Router() {
   return (
     <Switch>
       <Route path={"/"} component={DepartmentOverview} />
       <Route path={"/department/:id"} component={DepartmentDetail} />
+      <Route path={"/cost-analysis"} component={CostAnalysis} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
