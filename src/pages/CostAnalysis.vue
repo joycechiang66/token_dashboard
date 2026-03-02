@@ -197,28 +197,14 @@
             <p class="text-xl font-bold text-foreground">{{ formatCost(trendMinCost) }}</p>
           </div>
         </div>
-        <!-- Bar chart -->
-        <div class="relative h-48 flex items-end gap-1 px-2">
-          <div
-            v-for="(day, i) in last30DaysTrend"
-            :key="i"
-            class="flex-1 flex flex-col items-center gap-1 group"
-          >
-            <div class="relative w-full">
-              <div
-                :style="{ height: Math.max((day.cost / trendMaxCost) * 140, 2) + 'px' }"
-                class="w-full bg-primary rounded-t opacity-80 group-hover:opacity-100 transition-all"
-              />
-              <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-foreground text-background text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-10">
-                {{ day.date }}: {{ formatCost(day.cost) }}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="flex justify-between text-xs text-muted-foreground mt-2 px-2">
-          <span>{{ last30DaysTrend[0]?.date }}</span>
-          <span>{{ last30DaysTrend[Math.floor(last30DaysTrend.length / 2)]?.date }}</span>
-          <span>{{ last30DaysTrend[last30DaysTrend.length - 1]?.date }}</span>
+        <!-- Chart.js Line/Bar chart -->
+        <div class="h-64">
+          <Bar
+            v-if="trendChartData"
+            :data="trendChartData"
+            :options="trendChartOptions"
+            :key="trendChartKey"
+          />
         </div>
       </div>
 
@@ -243,36 +229,14 @@
             <p class="text-xl font-bold text-foreground">{{ historyAvgRate.toFixed(1) }}%</p>
           </div>
         </div>
-        <!-- Grouped bar chart: cost vs budget -->
-        <div class="relative h-48 flex items-end gap-2 px-2">
-          <div
-            v-for="(month, i) in budgetHistory"
-            :key="i"
-            class="flex-1 flex items-end gap-0.5 group"
-          >
-            <div class="relative flex-1">
-              <div
-                :style="{ height: Math.max((month.cost / historyMaxBudget) * 140, 2) + 'px' }"
-                class="w-full bg-primary rounded-t opacity-80 group-hover:opacity-100 transition-all"
-              />
-            </div>
-            <div class="relative flex-1">
-              <div
-                :style="{ height: Math.max((month.budget / historyMaxBudget) * 140, 2) + 'px' }"
-                class="w-full bg-muted-foreground rounded-t opacity-40 group-hover:opacity-60 transition-all"
-              />
-            </div>
-            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-foreground text-background text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition pointer-events-none z-10">
-              {{ month.month }}: {{ formatCost(month.cost) }} / {{ formatCost(month.budget) }}
-            </div>
-          </div>
-        </div>
-        <div class="flex justify-between text-xs text-muted-foreground mt-2 px-2">
-          <span v-for="(m, i) in budgetHistory" :key="i" class="flex-1 text-center truncate">{{ m.month.slice(5) }}</span>
-        </div>
-        <div class="flex gap-4 mt-3 text-xs text-muted-foreground">
-          <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-primary inline-block opacity-80" /> 實際成本</span>
-          <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-muted-foreground inline-block opacity-40" /> 預算上限</span>
+        <!-- Chart.js grouped bar chart -->
+        <div class="h-64">
+          <Bar
+            v-if="budgetChartData"
+            :data="budgetChartData"
+            :options="budgetChartOptions"
+            :key="budgetChartKey"
+          />
         </div>
       </div>
 
@@ -417,7 +381,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive } from 'vue'
+import { computed, ref, reactive, watch } from 'vue'
+import { Bar, Line } from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js'
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, Filler)
 import { getMockData, filterRecordsByDateRange, filterRecordsByModels, getAvailableModels } from '../utils/mockData'
 import { calculateTotalCost, formatCostCompact, formatCost, calculateRecordCost } from '../utils/costCalculator'
 import { useBudgetStore } from '../stores/budgetStore'
@@ -552,6 +531,138 @@ const historyAvgRate = computed(() => {
   return h.reduce((s, m) => s + (m.cost / m.budget) * 100, 0) / h.length
 })
 const historyMaxBudget = computed(() => Math.max(...budgetHistory.value.map((m) => Math.max(m.cost, m.budget)), 0.01))
+
+// ========== Chart.js: Cost Trend ==========
+const trendChartKey = ref(0)
+const trendChartData = computed(() => {
+  const data = last30DaysTrend.value
+  return {
+    labels: data.map((d) => d.date),
+    datasets: [
+      {
+        label: '日成本 (USD)',
+        data: data.map((d) => d.cost),
+        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+        borderColor: 'rgba(59, 130, 246, 1)',
+        borderWidth: 1,
+        borderRadius: 4,
+        hoverBackgroundColor: 'rgba(59, 130, 246, 0.9)',
+      },
+    ],
+  }
+})
+const trendChartOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: { mode: 'index' as const, intersect: false },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: 'rgba(0,0,0,0.8)',
+      titleFont: { size: 12 },
+      bodyFont: { size: 12 },
+      padding: 10,
+      cornerRadius: 6,
+      callbacks: {
+        label: (ctx: any) => `成本: $${ctx.parsed.y.toFixed(2)}`,
+      },
+    },
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: { maxRotation: 45, font: { size: 10 }, maxTicksLimit: 15 },
+    },
+    y: {
+      beginAtZero: true,
+      grid: { color: 'rgba(0,0,0,0.06)' },
+      ticks: {
+        font: { size: 11 },
+        callback: (value: any) => `$${Number(value).toFixed(2)}`,
+      },
+    },
+  },
+}))
+
+// ========== Chart.js: Budget History ==========
+const budgetChartKey = ref(0)
+const budgetChartData = computed(() => {
+  const data = budgetHistory.value
+  return {
+    labels: data.map((m) => m.month),
+    datasets: [
+      {
+        label: '實際成本',
+        data: data.map((m) => m.cost),
+        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+        borderColor: 'rgba(59, 130, 246, 1)',
+        borderWidth: 1,
+        borderRadius: 4,
+        hoverBackgroundColor: 'rgba(59, 130, 246, 0.9)',
+      },
+      {
+        label: '預算上限',
+        data: data.map((m) => m.budget),
+        backgroundColor: 'rgba(156, 163, 175, 0.35)',
+        borderColor: 'rgba(156, 163, 175, 0.6)',
+        borderWidth: 1,
+        borderRadius: 4,
+        hoverBackgroundColor: 'rgba(156, 163, 175, 0.5)',
+      },
+    ],
+  }
+})
+const budgetChartOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: { mode: 'index' as const, intersect: false },
+  plugins: {
+    legend: {
+      display: true,
+      position: 'bottom' as const,
+      labels: { usePointStyle: true, padding: 16, font: { size: 12 } },
+    },
+    tooltip: {
+      backgroundColor: 'rgba(0,0,0,0.8)',
+      titleFont: { size: 12 },
+      bodyFont: { size: 12 },
+      padding: 10,
+      cornerRadius: 6,
+      callbacks: {
+        label: (ctx: any) => {
+          const label = ctx.dataset.label || ''
+          return `${label}: $${ctx.parsed.y.toLocaleString()}`
+        },
+      },
+    },
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: { font: { size: 11 } },
+    },
+    y: {
+      beginAtZero: true,
+      grid: { color: 'rgba(0,0,0,0.06)' },
+      ticks: {
+        font: { size: 11 },
+        callback: (value: any) => {
+          const v = Number(value)
+          return v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v}`
+        },
+      },
+    },
+  },
+}))
+
+// 當篩選條件變化時更新圖表 key 以觸發重新渲染
+watch([dateRange, selectedModels], () => {
+  trendChartKey.value++
+}, { deep: true })
+
+watch(budgetHistory, () => {
+  budgetChartKey.value++
+}, { deep: true })
 
 // Model stats for pie chart
 const pieColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#84cc16']
