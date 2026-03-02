@@ -23,10 +23,16 @@ import CostTrendChart from '@/components/CostTrendChart';
 import { TokenRecord } from '@/lib/mockData';
 import EfficiencyRanking from '@/components/EfficiencyRanking';
 import { Department, Employee } from '@/lib/mockData';
+import BudgetAlert from '@/components/BudgetAlert';
+import BudgetSettingsModal from '@/components/BudgetSettingsModal';
+import { useBudget } from '@/contexts/BudgetContext';
+import { Settings } from 'lucide-react';
 
 export default function DepartmentOverview() {
   const [location, setLocation] = useLocation();
   const data = getMockData();
+  const { getCompanyBudget, getDepartmentBudget } = useBudget();
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   
   // Date range state
   const today = new Date();
@@ -99,20 +105,62 @@ export default function DepartmentOverview() {
     filteredRecords: TokenRecord[];
   }
   
+  // Get company budget and cost
+  const companyBudget = getCompanyBudget();
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container py-6">
-          <div className="flex items-center gap-3 mb-2">
-            <BarChart3 className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold text-foreground">Token 使用量儀表板</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <BarChart3 className="w-8 h-8 text-primary" />
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">Token 使用量儀表板</h1>
+                <p className="text-muted-foreground">公司內部 AI Token 消耗統計與分析</p>
+              </div>
+            </div>
+            <Button
+              onClick={() => setIsBudgetModalOpen(true)}
+              className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <Settings className="w-4 h-4" />
+              預算設定
+            </Button>
           </div>
-          <p className="text-muted-foreground">公司內部 AI Token 消耗統計與分析</p>
         </div>
       </header>
 
       <main className="container py-8">
+        {/* Budget Alerts */}
+        <div className="mb-12">
+          <BudgetAlert
+            name="公司整體預算"
+            currentCost={companyCost}
+            budgetLimit={companyBudget}
+            type="company"
+          />
+        </div>
+
+        {/* Department Budget Alerts */}
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-foreground mb-6">部門預算狀態</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredDepartments.map((dept) => (
+              <BudgetAlert
+                key={dept.id}
+                name={dept.name}
+                currentCost={dept.filteredRecords.reduce((total, record) => {
+                  return total + calculateModelCost(record.model, record.inputTokens, record.outputTokens);
+                }, 0)}
+                budgetLimit={getDepartmentBudget(dept.id)}
+                type="department"
+              />
+            ))}
+          </div>
+        </div>
+
         {/* Company-wide Statistics */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
@@ -338,6 +386,13 @@ export default function DepartmentOverview() {
           </div>
         </div>
       </main>
+
+      {/* Budget Settings Modal */}
+      <BudgetSettingsModal
+        isOpen={isBudgetModalOpen}
+        onClose={() => setIsBudgetModalOpen(false)}
+        departments={data.departments}
+      />
     </div>
   );
 }
