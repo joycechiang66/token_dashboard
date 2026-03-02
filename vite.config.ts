@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import tailwindcss from 'tailwindcss'
-import autoprefixer from 'autoprefixer'
+
 import path from 'path'
 import fs from 'node:fs'
 import { vitePluginManusRuntime } from 'vite-plugin-manus-runtime'
@@ -138,11 +137,7 @@ export default defineConfig({
       '@': path.resolve(PROJECT_ROOT, 'src'),
     },
   },
-  css: {
-    postcss: {
-      plugins: [tailwindcss, autoprefixer],
-    },
-  },
+
   envDir: PROJECT_ROOT,
   root: PROJECT_ROOT,
   build: {
