@@ -25,6 +25,7 @@ import { Settings } from 'lucide-react';
 import CostTrendChart from '@/components/CostTrendChart';
 import ModelCostAnalysis from '@/components/ModelCostAnalysis';
 import BudgetHistoryChart from '@/components/BudgetHistoryChart';
+import ExportPDFButton from '@/components/ExportPDFButton';
 
 export default function CostAnalysis() {
   const [, setLocation] = useLocation();
@@ -116,7 +117,7 @@ export default function CostAnalysis() {
 
       <main className="container py-8">
         {/* Budget Status */}
-        <div className="mb-12">
+        <div id="budget-status" className="mb-12">
           <h3 className="text-xl font-semibold text-foreground mb-6">預算狀態</h3>
           
           {/* Company Budget */}
@@ -153,6 +154,7 @@ export default function CostAnalysis() {
         <div className="mb-8 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-foreground">成本分析</h2>
           <div className="flex items-center gap-3">
+            <ExportPDFButton fileName={`cost-analysis-${new Date().toISOString().split('T')[0]}.pdf`} />
             <ModelFilter availableModels={availableModels} selectedModels={selectedModels} onModelsChange={setSelectedModels} />
             <DateRangeFilter
               onDateRangeChange={setDateRange}
@@ -163,7 +165,7 @@ export default function CostAnalysis() {
         </div>
 
         {/* Summary Stats */}
-        <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div id="summary-stats" className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="p-6 border border-border bg-card">
             <p className="text-sm text-muted-foreground mb-2">篩選期間成本</p>
             <p className="text-3xl font-bold text-foreground">{formatCostCompact(companyCost)}</p>
@@ -181,22 +183,22 @@ export default function CostAnalysis() {
         </div>
 
         {/* 30-Day Cost Trend */}
-        <div className="mb-12">
+        <div id="cost-trend-chart" className="mb-12">
           <CostTrendChart records={trendChartRecords} title="過去 30 天成本趨勢" height={350} />
         </div>
 
         {/* 12-Month Budget History */}
-        <div className="mb-12">
-          <BudgetHistoryChart title="預算使用歷史趨勢（12 個月）" height={400} />
+        <div id="budget-history-chart" className="mb-12">
+          <BudgetHistoryChart title="預算使用歷史趨勢（１２ 個月）" height={400} />
         </div>
 
         {/* Model Cost Analysis */}
-        <div className="mb-12">
+        <div id="model-cost-analysis" className="mb-12">
           <ModelCostAnalysis records={filteredRecords} title="模型成本分析" />
         </div>
 
         {/* Department Cost Comparison */}
-        <div className="mb-12">
+        <div id="department-comparison" className="mb-12">
           <Card className="p-6 border border-border bg-card">
             <h3 className="text-lg font-semibold text-foreground mb-6">部門成本對比</h3>
             <div className="space-y-3">
