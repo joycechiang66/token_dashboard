@@ -140,7 +140,7 @@ export default function CostAnalysis() {
           {/* Department Budgets */}
           <div className="space-y-4">
             <h4 className="font-semibold text-foreground">部門預算狀態</h4>
-            <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {departmentCosts.map((dept) => {
                   const deptBudget = getDepartmentBudget(dept.id);
                   return (
