@@ -398,7 +398,7 @@ const tokenRecords = ref<TokenRecord[]>(data.value.tokenRecords)
 const availableModels = ref<string[]>(getAvailableModels())
 
 // Filters
-const selectedModels = ref<string[]>([])
+const selectedModels = ref<string[]>([...availableModels.value])
 const now = new Date()
 const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 const dateRange = ref({
@@ -425,7 +425,10 @@ function toggleModel(model: string) {
 }
 function selectAllModels() { selectedModels.value = [...availableModels.value] }
 function clearModels() { selectedModels.value = [] }
-function resetFilters() { setLast30Days(); selectedModels.value = [] }
+function resetFilters() {
+  setLast30Days()
+  selectedModels.value = [...availableModels.value]
+}
 
 // Filtered records
 const filteredRecords = computed(() => {
