@@ -126,19 +126,21 @@ export default function CostAnalysis() {
         {/* Budget Status */}
         <div className="mb-12">
           <h3 className="text-xl font-semibold text-foreground mb-6">預算狀態</h3>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Company Budget */}
+          
+          {/* Company Budget */}
+          <div className="mb-8">
             <BudgetAlert
               name="公司整體預算"
               currentCost={companyCost}
               budgetLimit={getCompanyBudget()}
               type="company"
             />
-            
-            {/* Department Budgets */}
-            <div className="space-y-4">
-              <h4 className="font-semibold text-foreground">部門預算狀態</h4>
-              <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
+          </div>
+          
+          {/* Department Budgets */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-foreground">部門預算狀態</h4>
+            <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
                 {departmentCosts.map((dept) => {
                   const deptBudget = getDepartmentBudget(dept.id);
                   return (
@@ -151,7 +153,6 @@ export default function CostAnalysis() {
                     />
                   );
                 })}
-              </div>
             </div>
           </div>
         </div>
