@@ -10,11 +10,12 @@
 
 import { useState } from 'react';
 import { useLocation, useRoute } from 'wouter';
-import { getDepartmentById, formatTokens, calculatePercentage, filterRecordsByDateRange, calculateStatsFromRecords } from '@/lib/mockData';
+import { getDepartmentById, formatTokens, calculatePercentage, filterRecordsByDateRange, calculateStatsFromRecords, getAvailableModels, TokenRecord } from '@/lib/mockData';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Users, TrendingUp } from 'lucide-react';
 import DateRangeFilter, { DateRange } from '@/components/DateRangeFilter';
+import ModelFilter from '@/components/ModelFilter';
 
 export default function DepartmentDetail() {
   const [location, setLocation] = useLocation();
@@ -32,6 +33,9 @@ export default function DepartmentDetail() {
     startDate: defaultStartDate,
     endDate: defaultEndDate,
   });
+  
+  // Model filter state
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
 
   const departmentId = params?.id as string;
   const department = getDepartmentById(departmentId);
@@ -47,13 +51,22 @@ export default function DepartmentDetail() {
     );
   }
 
-  // Filter and calculate stats based on date range
+  // Get all available models from all records
+  const allRecords = department.employees.flatMap((emp) => emp.tokenRecords);
+  const availableModels = getAvailableModels(allRecords);
+  
+  // Filter records by date and model
+  const filterRecordsByDateAndModel = (records: TokenRecord[]) => {
+    let filtered = filterRecordsByDateRange(records, dateRange.startDate, dateRange.endDate);
+    if (selectedModels.length > 0) {
+      filtered = filtered.filter((r) => selectedModels.includes(r.model));
+    }
+    return filtered;
+  };
+
+  // Filter and calculate stats based on date range and selected models
   const filteredEmployees = department.employees.map((employee) => {
-    const filteredRecords = filterRecordsByDateRange(
-      employee.tokenRecords,
-      dateRange.startDate,
-      dateRange.endDate
-    );
+    const filteredRecords = filterRecordsByDateAndModel(employee.tokenRecords);
     const stats = calculateStatsFromRecords(filteredRecords);
     return {
       ...employee,
@@ -66,7 +79,7 @@ export default function DepartmentDetail() {
 
   // Calculate department stats from filtered records
   const departmentFilteredRecords = department.employees.flatMap((emp) =>
-    filterRecordsByDateRange(emp.tokenRecords, dateRange.startDate, dateRange.endDate)
+    filterRecordsByDateAndModel(emp.tokenRecords)
   );
   const departmentStats = calculateStatsFromRecords(departmentFilteredRecords);
 
@@ -100,11 +113,18 @@ export default function DepartmentDetail() {
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-foreground">部門統計</h2>
-            <DateRangeFilter
-              onDateRangeChange={setDateRange}
-              initialStartDate={dateRange.startDate}
-              initialEndDate={dateRange.endDate}
-            />
+            <div className="flex items-center gap-3">
+              <ModelFilter
+                availableModels={availableModels}
+                selectedModels={selectedModels}
+                onModelsChange={setSelectedModels}
+              />
+              <DateRangeFilter
+                onDateRangeChange={setDateRange}
+                initialStartDate={dateRange.startDate}
+                initialEndDate={dateRange.endDate}
+              />
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

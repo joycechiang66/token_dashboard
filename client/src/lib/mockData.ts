@@ -210,6 +210,12 @@ export function filterRecordsByDateRange(
   });
 }
 
+// Get all available models from records
+export function getAvailableModels(records: TokenRecord[]): string[] {
+  const models = new Set(records.map((r) => r.model));
+  return Array.from(models).sort();
+}
+
 // Calculate stats from filtered records
 export function calculateStatsFromRecords(records: TokenRecord[]) {
   const totalInputTokens = records.reduce((sum, r) => sum + r.inputTokens, 0);
