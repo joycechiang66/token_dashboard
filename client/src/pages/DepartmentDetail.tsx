@@ -18,6 +18,7 @@ import DateRangeFilter, { DateRange } from '@/components/DateRangeFilter';
 import ModelFilter from '@/components/ModelFilter';
 import ExportButton from '@/components/ExportButton';
 import { exportDepartmentSummaryCSV, exportModelBreakdownCSV, exportEmployeeDetailCSV } from '@/lib/csvExport';
+import { calculateModelCost, formatCostCompact } from '@/lib/costCalculator';
 
 export default function DepartmentDetail() {
   const [location, setLocation] = useLocation();
@@ -84,6 +85,11 @@ export default function DepartmentDetail() {
     filterRecordsByDateAndModel(emp.tokenRecords)
   );
   const departmentStats = calculateStatsFromRecords(departmentFilteredRecords);
+  
+  // Calculate department cost
+  const departmentCost = departmentFilteredRecords.reduce((total, record) => {
+    return total + calculateModelCost(record.model, record.inputTokens, record.outputTokens);
+  }, 0);
 
   // Sort employees by total tokens (descending)
   const sortedEmployees = [...filteredEmployees].sort((a, b) => b.totalTokens - a.totalTokens);
@@ -174,6 +180,13 @@ export default function DepartmentDetail() {
                 {calculatePercentage(departmentStats.totalOutputTokens, departmentStats.totalTokens)}% 佔比
               </p>
             </Card>
+
+            {/* Estimated Cost */}
+            <Card className="p-6 border border-border bg-card">
+              <p className="text-sm font-medium text-muted-foreground mb-2">預估成本</p>
+              <p className="text-3xl font-bold text-foreground">{formatCostCompact(departmentCost)}</p>
+              <p className="text-xs text-muted-foreground mt-2">基於當前篩選條件</p>
+            </Card>
           </div>
         </div>
 
@@ -218,6 +231,16 @@ export default function DepartmentDetail() {
                           <p className="text-xs text-muted-foreground mb-1">佔比</p>
                           <p className="font-semibold text-primary">
                             {departmentStats.totalTokens > 0 ? calculatePercentage(employee.totalTokens, departmentStats.totalTokens) : 0}%
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">預估成本</p>
+                          <p className="font-semibold text-amber-600">
+                            {formatCostCompact(
+                              employee.filteredRecords.reduce((total, record) => {
+                                return total + calculateModelCost(record.model, record.inputTokens, record.outputTokens);
+                              }, 0)
+                            )}
                           </p>
                         </div>
                       </div>

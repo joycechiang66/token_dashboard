@@ -18,6 +18,7 @@ import DateRangeFilter, { DateRange } from '@/components/DateRangeFilter';
 import ModelFilter from '@/components/ModelFilter';
 import ExportButton from '@/components/ExportButton';
 import { exportDepartmentSummaryCSV } from '@/lib/csvExport';
+import { calculateModelCost, formatCostCompact } from '@/lib/costCalculator';
 
 export default function DepartmentOverview() {
   const [location, setLocation] = useLocation();
@@ -71,6 +72,11 @@ export default function DepartmentOverview() {
   // Calculate company-wide stats
   const companyFilteredRecords = filteredDepartments.flatMap((dept) => dept.filteredRecords);
   const companyStats = calculateStatsFromRecords(companyFilteredRecords);
+  
+  // Calculate company-wide cost
+  const companyCost = companyFilteredRecords.reduce((total, record) => {
+    return total + calculateModelCost(record.model, record.inputTokens, record.outputTokens);
+  }, 0);
   
   return (
     <div className="min-h-screen bg-background">
@@ -171,6 +177,20 @@ export default function DepartmentOverview() {
                 </div>
               </div>
             </Card>
+
+            {/* Estimated Cost Card */}
+            <Card className="p-6 border border-border bg-card hover:shadow-lg transition-shadow">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">預估成本</p>
+                  <p className="text-3xl font-bold text-foreground">{formatCostCompact(companyCost)}</p>
+                  <p className="text-xs text-muted-foreground mt-2">基於當前篩選條件</p>
+                </div>
+                <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <span className="text-amber-600 font-semibold text-lg">$</span>
+                </div>
+              </div>
+            </Card>
           </div>
 
           {/* Department Summary Stats */}
@@ -231,6 +251,18 @@ export default function DepartmentOverview() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">員工數</span>
                     <span className="font-semibold text-foreground">{department.employees.length}</span>
+                  </div>
+
+                  {/* Cost */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">預估成本</span>
+                    <span className="font-semibold text-amber-600">
+                      {formatCostCompact(
+                        department.filteredRecords.reduce((total, record) => {
+                          return total + calculateModelCost(record.model, record.inputTokens, record.outputTokens);
+                        }, 0)
+                      )}
+                    </span>
                   </div>
 
                   {/* Progress Bar */}
