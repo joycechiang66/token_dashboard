@@ -20,6 +20,7 @@ import ExportButton from '@/components/ExportButton';
 import { exportDepartmentSummaryCSV, exportModelBreakdownCSV, exportEmployeeDetailCSV } from '@/lib/csvExport';
 import { calculateModelCost, formatCostCompact } from '@/lib/costCalculator';
 import CostTrendChart from '@/components/CostTrendChart';
+import EfficiencyRanking from '@/components/EfficiencyRanking';
 
 export default function DepartmentDetail() {
   const [location, setLocation] = useLocation();
@@ -201,6 +202,19 @@ export default function DepartmentDetail() {
         {/* Cost Trend Chart */}
         <div className="mb-12">
           <CostTrendChart records={trendChartRecords} title="過去 30 天成本趨勢" height={350} />
+        </div>
+
+        {/* Employee Efficiency Ranking */}
+        <div className="mb-12">
+          <EfficiencyRanking
+            items={filteredEmployees.map((emp) => ({
+              id: emp.id,
+              name: emp.name,
+              records: emp.filteredRecords,
+            }))}
+            title="員工 Token 使用效率排名"
+            type="employee"
+          />
         </div>
 
         {/* Employees List */}

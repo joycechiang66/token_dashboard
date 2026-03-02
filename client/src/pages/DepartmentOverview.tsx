@@ -21,6 +21,8 @@ import { exportDepartmentSummaryCSV } from '@/lib/csvExport';
 import { calculateModelCost, formatCostCompact } from '@/lib/costCalculator';
 import CostTrendChart from '@/components/CostTrendChart';
 import { TokenRecord } from '@/lib/mockData';
+import EfficiencyRanking from '@/components/EfficiencyRanking';
+import { Department, Employee } from '@/lib/mockData';
 
 export default function DepartmentOverview() {
   const [location, setLocation] = useLocation();
@@ -88,6 +90,14 @@ export default function DepartmentOverview() {
   const trendChartRecords = selectedModels.length > 0
     ? allCompanyRecords.filter((r) => selectedModels.includes(r.model))
     : allCompanyRecords;
+  
+  // Type definitions for efficiency ranking
+  interface DepartmentWithFiltered extends Department {
+    filteredRecords: TokenRecord[];
+  }
+  interface EmployeeWithFiltered extends Employee {
+    filteredRecords: TokenRecord[];
+  }
   
   return (
     <div className="min-h-screen bg-background">
@@ -227,6 +237,19 @@ export default function DepartmentOverview() {
         {/* Cost Trend Chart */}
         <div className="mb-12">
           <CostTrendChart records={trendChartRecords} title="過去 30 天成本趨勢" height={350} />
+        </div>
+
+        {/* Department Efficiency Ranking */}
+        <div className="mb-12">
+          <EfficiencyRanking
+            items={filteredDepartments.map((dept) => ({
+              id: dept.id,
+              name: dept.name,
+              records: dept.filteredRecords,
+            }))}
+            title="部門 Token 使用效率排名"
+            type="department"
+          />
         </div>
 
         {/* Departments Grid */}
