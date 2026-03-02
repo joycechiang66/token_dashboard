@@ -47,7 +47,7 @@ interface Alert {
   message: string
 }
 
-defineProps<{
+const props = defineProps<{
   alerts: Alert[]
 }>()
 

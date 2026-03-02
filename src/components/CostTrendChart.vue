@@ -30,7 +30,7 @@ import { computed } from 'vue'
 import type { TokenRecord } from '../types'
 import { calculateRecordCost, formatCostCompact, formatCost } from '../utils/costCalculator'
 
-defineProps<{
+const props = defineProps<{
   records: TokenRecord[]
 }>()
 

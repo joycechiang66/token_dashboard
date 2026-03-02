@@ -47,7 +47,7 @@ interface DateRange {
   endDate: string
 }
 
-defineProps<{
+const props = defineProps<{
   modelValue: DateRange
 }>()
 
@@ -59,14 +59,14 @@ function updateStart(e: Event) {
   const target = e.target as HTMLInputElement
   emit('update:modelValue', {
     startDate: target.value,
-    endDate: modelValue.endDate,
+    endDate: props.modelValue.endDate,
   })
 }
 
 function updateEnd(e: Event) {
   const target = e.target as HTMLInputElement
   emit('update:modelValue', {
-    startDate: modelValue.startDate,
+    startDate: props.modelValue.startDate,
     endDate: target.value,
   })
 }

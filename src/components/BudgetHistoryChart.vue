@@ -35,7 +35,7 @@ interface BudgetHistoryItem {
   budget: number
 }
 
-defineProps<{
+const props = defineProps<{
   history: BudgetHistoryItem[]
 }>()
 

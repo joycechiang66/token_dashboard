@@ -38,7 +38,7 @@ import { computed } from 'vue'
 import type { Department, DepartmentStats } from '../types'
 import { formatCost } from '../utils/costCalculator'
 
-defineProps<{
+const props = defineProps<{
   departments: Department[]
   stats: Record<string, DepartmentStats>
 }>()

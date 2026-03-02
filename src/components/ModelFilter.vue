@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   modelValue: string[]
   availableModels: string[]
 }>()
@@ -48,7 +48,7 @@ function handleChange(e: Event) {
 }
 
 function selectAll() {
-  emit('update:modelValue', [...availableModels])
+  emit('update:modelValue', [...props.availableModels])
 }
 
 function clearAll() {
