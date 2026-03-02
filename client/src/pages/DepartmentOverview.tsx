@@ -10,14 +10,67 @@
 
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { getMockData, formatTokens, calculatePercentage } from '@/lib/mockData';
+import { getMockData, formatTokens, calculatePercentage, filterRecordsByDateRange, calculateStatsFromRecords, getAvailableModels } from '@/lib/mockData';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, BarChart3, Users } from 'lucide-react';
+import DateRangeFilter, { DateRange } from '@/components/DateRangeFilter';
+import ModelFilter from '@/components/ModelFilter';
+import ExportButton from '@/components/ExportButton';
+import { exportDepartmentSummaryCSV } from '@/lib/csvExport';
 
 export default function DepartmentOverview() {
   const [location, setLocation] = useLocation();
   const data = getMockData();
+  
+  // Date range state
+  const today = new Date();
+  const defaultEndDate = today.toISOString().split('T')[0];
+  const defaultStartDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split('T')[0];
+  
+  const [dateRange, setDateRange] = useState<DateRange>({
+    startDate: defaultStartDate,
+    endDate: defaultEndDate,
+  });
+  
+  // Model filter state
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  
+  // Get all available models
+  const allRecords = data.departments.flatMap((dept) =>
+    dept.employees.flatMap((emp) => emp.tokenRecords)
+  );
+  const availableModels = getAvailableModels(allRecords);
+  
+  // Filter records by date and model
+  const filterRecordsByDateAndModel = (records: any[]) => {
+    let filtered = filterRecordsByDateRange(records, dateRange.startDate, dateRange.endDate);
+    if (selectedModels.length > 0) {
+      filtered = filtered.filter((r) => selectedModels.includes(r.model));
+    }
+    return filtered;
+  };
+  
+  // Calculate filtered stats for company-wide view
+  const filteredDepartments = data.departments.map((dept) => {
+    const filteredRecords = dept.employees.flatMap((emp) =>
+      filterRecordsByDateAndModel(emp.tokenRecords)
+    );
+    const stats = calculateStatsFromRecords(filteredRecords);
+    return {
+      ...dept,
+      filteredRecords,
+      totalInputTokens: stats.totalInputTokens,
+      totalOutputTokens: stats.totalOutputTokens,
+      totalTokens: stats.totalTokens,
+    };
+  });
+  
+  // Calculate company-wide stats
+  const companyFilteredRecords = filteredDepartments.flatMap((dept) => dept.filteredRecords);
+  const companyStats = calculateStatsFromRecords(companyFilteredRecords);
   
   return (
     <div className="min-h-screen bg-background">
@@ -35,7 +88,43 @@ export default function DepartmentOverview() {
       <main className="container py-8">
         {/* Company-wide Statistics */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-foreground mb-6">公司整體統計</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-foreground">公司整體統計</h2>
+            <div className="flex items-center gap-3">
+              <ExportButton
+                options={[
+                  {
+                    label: '匯出公司摘要',
+                    description: '匯出公司統計和部門排行',
+                    onClick: () => {
+                      // Create a virtual company object for export
+                      const virtualCompany = {
+                        id: 'company',
+                        name: '公司整體',
+                        description: '',
+                        employees: data.departments.flatMap((d) => d.employees),
+                        totalInputTokens: companyStats.totalInputTokens,
+                        totalOutputTokens: companyStats.totalOutputTokens,
+                        totalTokens: companyStats.totalTokens,
+                        employeeCount: data.departments.flatMap((d) => d.employees).length,
+                      } as any;
+                      exportDepartmentSummaryCSV(virtualCompany, dateRange, selectedModels);
+                    },
+                  },
+                ]}
+              />
+              <ModelFilter
+                availableModels={availableModels}
+                selectedModels={selectedModels}
+                onModelsChange={setSelectedModels}
+              />
+              <DateRangeFilter
+                onDateRangeChange={setDateRange}
+                initialStartDate={dateRange.startDate}
+                initialEndDate={dateRange.endDate}
+              />
+            </div>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {/* Total Tokens Card */}
@@ -43,7 +132,7 @@ export default function DepartmentOverview() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">總 Token 使用量</p>
-                  <p className="text-3xl font-bold text-foreground">{formatTokens(data.totalTokens)}</p>
+                  <p className="text-3xl font-bold text-foreground">{formatTokens(companyStats.totalTokens)}</p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
                   <BarChart3 className="w-6 h-6 text-primary" />
@@ -56,9 +145,9 @@ export default function DepartmentOverview() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">輸入 Token</p>
-                  <p className="text-3xl font-bold text-foreground">{formatTokens(data.totalInputTokens)}</p>
+                  <p className="text-3xl font-bold text-foreground">{formatTokens(companyStats.totalInputTokens)}</p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {calculatePercentage(data.totalInputTokens, data.totalTokens)}% 佔比
+                    {calculatePercentage(companyStats.totalInputTokens, companyStats.totalTokens)}% 佔比
                   </p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -72,9 +161,9 @@ export default function DepartmentOverview() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-2">輸出 Token</p>
-                  <p className="text-3xl font-bold text-foreground">{formatTokens(data.totalOutputTokens)}</p>
+                  <p className="text-3xl font-bold text-foreground">{formatTokens(companyStats.totalOutputTokens)}</p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {calculatePercentage(data.totalOutputTokens, data.totalTokens)}% 佔比
+                    {calculatePercentage(companyStats.totalOutputTokens, companyStats.totalTokens)}% 佔比
                   </p>
                 </div>
                 <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
@@ -91,7 +180,7 @@ export default function DepartmentOverview() {
                 <Users className="w-5 h-5 text-primary" />
                 <h3 className="text-lg font-semibold text-foreground">部門數量</h3>
               </div>
-              <p className="text-4xl font-bold text-primary">{data.departmentCount}</p>
+              <p className="text-4xl font-bold text-primary">{filteredDepartments.length}</p>
             </Card>
 
             <Card className="p-6 border border-border bg-card">
@@ -99,7 +188,7 @@ export default function DepartmentOverview() {
                 <Users className="w-5 h-5 text-primary" />
                 <h3 className="text-lg font-semibold text-foreground">員工總數</h3>
               </div>
-              <p className="text-4xl font-bold text-primary">{data.employeeCount}</p>
+              <p className="text-4xl font-bold text-primary">{filteredDepartments.reduce((sum, d) => sum + d.employees.length, 0)}</p>
             </Card>
           </div>
         </div>
@@ -109,7 +198,7 @@ export default function DepartmentOverview() {
           <h2 className="text-2xl font-bold text-foreground mb-6">各部門詳情</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data.departments.map((department) => (
+            {filteredDepartments.map((department) => (
               <Card 
                 key={department.id}
                 className="p-6 border border-border bg-card hover:shadow-lg hover:border-primary/50 transition-all cursor-pointer group"
@@ -141,7 +230,7 @@ export default function DepartmentOverview() {
                   {/* Employee Count */}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">員工數</span>
-                    <span className="font-semibold text-foreground">{department.employeeCount}</span>
+                    <span className="font-semibold text-foreground">{department.employees.length}</span>
                   </div>
 
                   {/* Progress Bar */}
@@ -149,14 +238,14 @@ export default function DepartmentOverview() {
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-xs text-muted-foreground">Token 佔比</span>
                       <span className="text-xs font-semibold text-primary">
-                        {calculatePercentage(department.totalTokens, data.totalTokens)}%
+                        {calculatePercentage(department.totalTokens, companyStats.totalTokens)}%
                       </span>
                     </div>
                     <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-primary rounded-full transition-all"
                         style={{
-                          width: `${calculatePercentage(department.totalTokens, data.totalTokens)}%`
+                          width: `${calculatePercentage(department.totalTokens, companyStats.totalTokens)}%`
                         }}
                       />
                     </div>
