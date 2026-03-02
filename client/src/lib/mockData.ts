@@ -15,6 +15,8 @@ export interface TokenRecord {
   inputTokens: number;
   outputTokens: number;
   totalTokens: number;
+  departmentId?: string;
+  employeeId?: string;
 }
 
 export interface Employee {
@@ -49,7 +51,7 @@ export interface CompanyStats {
 }
 
 // Generate mock token records for an employee
-function generateTokenRecords(employeeId: string, count: number = 15): TokenRecord[] {
+function generateTokenRecords(employeeId: string, departmentId: string, count: number = 15): TokenRecord[] {
   const models = ['GPT-4', 'GPT-3.5', 'Claude 3 Opus', 'Claude 3 Sonnet', 'Gemini Pro', 'LLaMA 2'];
   const records: TokenRecord[] = [];
   
@@ -70,6 +72,8 @@ function generateTokenRecords(employeeId: string, count: number = 15): TokenReco
       inputTokens,
       outputTokens,
       totalTokens: inputTokens + outputTokens,
+      departmentId,
+      employeeId,
     });
   }
   
@@ -89,7 +93,7 @@ function generateEmployees(departmentId: string, count: number): Employee[] {
     const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
     const name = `${firstName} ${lastName}`;
     const id = `emp-${departmentId}-${i}`;
-    const tokenRecords = generateTokenRecords(id);
+    const tokenRecords = generateTokenRecords(id, departmentId);
     
     const totalInputTokens = tokenRecords.reduce((sum, r) => sum + r.inputTokens, 0);
     const totalOutputTokens = tokenRecords.reduce((sum, r) => sum + r.outputTokens, 0);
