@@ -21,7 +21,6 @@ import { exportDepartmentSummaryCSV, exportModelBreakdownCSV, exportEmployeeDeta
 import { calculateModelCost, formatCostCompact } from '@/lib/costCalculator';
 import CostTrendChart from '@/components/CostTrendChart';
 import EfficiencyRanking from '@/components/EfficiencyRanking';
-import ModelCostAnalysis from '@/components/ModelCostAnalysis';
 
 export default function DepartmentDetail() {
   const [location, setLocation] = useLocation();
@@ -203,11 +202,6 @@ export default function DepartmentDetail() {
         {/* Cost Trend Chart */}
         <div className="mb-12">
           <CostTrendChart records={trendChartRecords} title="過去 30 天成本趨勢" height={350} />
-        </div>
-
-        {/* Model Cost Analysis */}
-        <div className="mb-12">
-          <ModelCostAnalysis records={departmentFilteredRecords} title="模型成本分析" />
         </div>
 
         {/* Employee Efficiency Ranking */}
