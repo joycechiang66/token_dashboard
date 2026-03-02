@@ -29,6 +29,7 @@ import { useBudget } from '@/contexts/BudgetContext';
 import { Settings } from 'lucide-react';
 import ModelCostAnalysis from '@/components/ModelCostAnalysis';
 import TopBudgetAlert from '@/components/TopBudgetAlert';
+import BudgetHistoryChart from '@/components/BudgetHistoryChart';
 
 export default function DepartmentOverview() {
   const [location, setLocation] = useLocation();
@@ -346,6 +347,11 @@ export default function DepartmentOverview() {
         {/* Model Cost Analysis */}
         <div className="mb-12">
           <ModelCostAnalysis records={companyFilteredRecords} title="公司模型成本分析" />
+        </div>
+
+        {/* Budget History Chart */}
+        <div className="mb-12">
+          <BudgetHistoryChart title="預算使用歷史趨勢" height={400} />
         </div>
 
         {/* Department Efficiency Ranking */}

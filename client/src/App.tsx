@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { BudgetProvider } from "./contexts/BudgetContext";
+import { BudgetHistoryProvider } from "./contexts/BudgetHistoryContext";
 import DepartmentOverview from "./pages/DepartmentOverview";
 import DepartmentDetail from "./pages/DepartmentDetail";
 
@@ -27,10 +28,12 @@ function App() {
         defaultTheme="light"
       >
         <BudgetProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <BudgetHistoryProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </BudgetHistoryProvider>
         </BudgetProvider>
       </ThemeProvider>
     </ErrorBoundary>
