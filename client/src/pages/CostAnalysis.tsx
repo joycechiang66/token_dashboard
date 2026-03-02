@@ -115,14 +115,6 @@ export default function CostAnalysis() {
       </header>
 
       <main className="container py-8">
-        {/* Filters */}
-        <div className="mb-8 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <DateRangeFilter onDateRangeChange={setDateRange} />
-            <ModelFilter availableModels={availableModels} selectedModels={selectedModels} onModelsChange={setSelectedModels} />
-          </div>
-        </div>
-
         {/* Budget Status */}
         <div className="mb-12">
           <h3 className="text-xl font-semibold text-foreground mb-6">預算狀態</h3>
@@ -154,6 +146,19 @@ export default function CostAnalysis() {
                   );
                 })}
             </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-8 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-foreground">成本分析</h2>
+          <div className="flex items-center gap-3">
+            <ModelFilter availableModels={availableModels} selectedModels={selectedModels} onModelsChange={setSelectedModels} />
+            <DateRangeFilter
+              onDateRangeChange={setDateRange}
+              initialStartDate={dateRange.startDate}
+              initialEndDate={dateRange.endDate}
+            />
           </div>
         </div>
 
