@@ -16,6 +16,8 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Users, TrendingUp } from 'lucide-react';
 import DateRangeFilter, { DateRange } from '@/components/DateRangeFilter';
 import ModelFilter from '@/components/ModelFilter';
+import ExportButton from '@/components/ExportButton';
+import { exportDepartmentSummaryCSV, exportModelBreakdownCSV, exportEmployeeDetailCSV } from '@/lib/csvExport';
 
 export default function DepartmentDetail() {
   const [location, setLocation] = useLocation();
@@ -114,6 +116,20 @@ export default function DepartmentDetail() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-foreground">部門統計</h2>
             <div className="flex items-center gap-3">
+              <ExportButton
+                options={[
+                  {
+                    label: '匯出部門摘要',
+                    description: '匯出部門統計和員工排行',
+                    onClick: () => exportDepartmentSummaryCSV(department, dateRange, selectedModels),
+                  },
+                  {
+                    label: '匯出模型分析',
+                    description: '匯出各模型的使用統計',
+                    onClick: () => exportModelBreakdownCSV(department, dateRange, selectedModels),
+                  },
+                ]}
+              />
               <ModelFilter
                 availableModels={availableModels}
                 selectedModels={selectedModels}
@@ -230,7 +246,20 @@ export default function DepartmentDetail() {
                 {/* Expanded Details - Token Records */}
                 {expandedEmployeeId === employee.id && (
                   <div className="mt-4 ml-4 space-y-3 animate-in fade-in-50 duration-200">
-                    <div className="text-sm font-semibold text-foreground mb-4">使用記錄 ({employee.filteredRecords.length} 筆)</div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-sm font-semibold text-foreground">使用記錄 ({employee.filteredRecords.length} 筆)</div>
+                      {employee.filteredRecords.length > 0 && (
+                        <ExportButton
+                          options={[
+                            {
+                              label: '下載詳細記錄',
+                              description: '下載該員工的 Token 使用記錄',
+                              onClick: () => exportEmployeeDetailCSV(employee, department, dateRange, selectedModels),
+                            },
+                          ]}
+                        />
+                      )}
+                    </div>
                     
                     {employee.filteredRecords.length > 0 ? (
                       employee.filteredRecords.slice(0, 10).map((record) => (
