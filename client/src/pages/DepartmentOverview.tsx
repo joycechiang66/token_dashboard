@@ -321,25 +321,6 @@ export default function DepartmentOverview() {
           </div>
         </div>
 
-        {/* Cost Analysis Link */}
-        <div className="mb-12">
-          <Card className="p-6 border border-primary/20 bg-primary/5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">深入成本分析</h3>
-                <p className="text-sm text-muted-foreground">查看詳細的成本趨勢、模型分析、預算狀態和預算歷史</p>
-              </div>
-              <Button
-                onClick={() => setLocation('/cost-analysis')}
-                className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <BarChart3 className="w-4 h-4" />
-                前往分析
-              </Button>
-            </div>
-          </Card>
-        </div>
-
         {/* Department Efficiency Ranking */}
         <div className="mb-12">
           <EfficiencyRanking
