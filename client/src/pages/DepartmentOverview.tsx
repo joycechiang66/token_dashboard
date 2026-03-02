@@ -300,10 +300,8 @@ export default function DepartmentOverview() {
                 </div>
               </div>
             </Card>
-          </div>
 
-          {/* Department Summary Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Department Count Card */}
             <Card className="p-6 border border-border bg-card">
               <div className="flex items-center gap-3 mb-4">
                 <Users className="w-5 h-5 text-primary" />
@@ -312,6 +310,7 @@ export default function DepartmentOverview() {
               <p className="text-4xl font-bold text-primary">{filteredDepartments.length}</p>
             </Card>
 
+            {/* Employee Count Card */}
             <Card className="p-6 border border-border bg-card">
               <div className="flex items-center gap-3 mb-4">
                 <Users className="w-5 h-5 text-primary" />
