@@ -12,11 +12,16 @@
 import { useState } from 'react';
 import { getMockData, getAvailableModels } from '@/lib/mockData';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import { useLocation } from 'wouter';
 import DateRangeFilter, { DateRange } from '@/components/DateRangeFilter';
 import ModelFilter from '@/components/ModelFilter';
 import { calculateModelCost, formatCostCompact } from '@/lib/costCalculator';
+import { useBudget } from '@/contexts/BudgetContext';
+import BudgetAlert from '@/components/BudgetAlert';
+import BudgetSettingsModal from '@/components/BudgetSettingsModal';
+import { Settings } from 'lucide-react';
 import CostTrendChart from '@/components/CostTrendChart';
 import ModelCostAnalysis from '@/components/ModelCostAnalysis';
 import BudgetHistoryChart from '@/components/BudgetHistoryChart';
@@ -24,6 +29,8 @@ import BudgetHistoryChart from '@/components/BudgetHistoryChart';
 export default function CostAnalysis() {
   const [, setLocation] = useLocation();
   const data = getMockData();
+  const { getCompanyBudget, getDepartmentBudget } = useBudget();
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
 
   // Date range state
   const today = new Date();
@@ -97,6 +104,13 @@ export default function CostAnalysis() {
             </button>
             <h1 className="text-2xl font-bold text-foreground">成本分析</h1>
           </div>
+          <Button
+            onClick={() => setIsBudgetModalOpen(true)}
+            className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            <Settings className="w-4 h-4" />
+            預算設定
+          </Button>
         </div>
       </header>
 
@@ -106,6 +120,39 @@ export default function CostAnalysis() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <DateRangeFilter onDateRangeChange={setDateRange} />
             <ModelFilter availableModels={availableModels} selectedModels={selectedModels} onModelsChange={setSelectedModels} />
+          </div>
+        </div>
+
+        {/* Budget Status */}
+        <div className="mb-12">
+          <h3 className="text-xl font-semibold text-foreground mb-6">預算狀態</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Company Budget */}
+            <BudgetAlert
+              name="公司整體預算"
+              currentCost={companyCost}
+              budgetLimit={getCompanyBudget()}
+              type="company"
+            />
+            
+            {/* Department Budgets */}
+            <div className="space-y-4">
+              <h4 className="font-semibold text-foreground">部門預算狀態</h4>
+              <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
+                {departmentCosts.map((dept) => {
+                  const deptBudget = getDepartmentBudget(dept.id);
+                  return (
+                    <BudgetAlert
+                      key={dept.id}
+                      name={dept.name}
+                      currentCost={dept.cost}
+                      budgetLimit={deptBudget}
+                      type="department"
+                    />
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -170,6 +217,9 @@ export default function CostAnalysis() {
           </Card>
         </div>
       </main>
+
+      {/* Budget Settings Modal */}
+      <BudgetSettingsModal isOpen={isBudgetModalOpen} onClose={() => setIsBudgetModalOpen(false)} departments={data.departments} />
     </div>
   );
 }

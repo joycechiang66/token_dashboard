@@ -169,13 +169,7 @@ export default function DepartmentOverview() {
                 <p className="text-muted-foreground">公司內部 AI Token 消耗統計與分析</p>
               </div>
             </div>
-            <Button
-              onClick={() => setIsBudgetModalOpen(true)}
-              className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <Settings className="w-4 h-4" />
-              預算設定
-            </Button>
+            {/* Budget settings moved to cost analysis page */}
           </div>
         </div>
       </header>
@@ -187,32 +181,24 @@ export default function DepartmentOverview() {
             <TopBudgetAlert alerts={budgetAlerts} />
           </div>
         )}
-        {/* Budget Status Cards */}
-        <div className="mb-12">
-          <BudgetAlert
-            name="公司整體預算"
-            currentCost={companyCost}
-            budgetLimit={companyBudget}
-            type="company"
-          />
-        </div>
 
-        {/* Department Budget Alerts */}
+        {/* Cost Analysis Link */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-foreground mb-6">部門預算狀態</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredDepartments.map((dept) => (
-              <BudgetAlert
-                key={dept.id}
-                name={dept.name}
-                currentCost={dept.filteredRecords.reduce((total, record) => {
-                  return total + calculateModelCost(record.model, record.inputTokens, record.outputTokens);
-                }, 0)}
-                budgetLimit={getDepartmentBudget(dept.id)}
-                type="department"
-              />
-            ))}
-          </div>
+          <Card className="p-6 border border-primary/20 bg-primary/5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">深入成本分析</h3>
+                <p className="text-sm text-muted-foreground">查看詳細的成本趨勢、模型分析、預算狀態和預算歷史</p>
+              </div>
+              <Button
+                onClick={() => setLocation('/cost-analysis')}
+                className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <BarChart3 className="w-4 h-4" />
+                前往分析
+              </Button>
+            </div>
+          </Card>
         </div>
 
         {/* Company-wide Statistics */}
@@ -342,7 +328,7 @@ export default function DepartmentOverview() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">深入成本分析</h3>
-                <p className="text-sm text-muted-foreground">查看詳細的成本趨勢、模型分析和預算歷史</p>
+                <p className="text-sm text-muted-foreground">查看詳細的成本趨勢、模型分析、預算狀態和預算歷史</p>
               </div>
               <Button
                 onClick={() => setLocation('/cost-analysis')}
