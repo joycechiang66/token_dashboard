@@ -4,10 +4,12 @@
     <header class="border-b border-border bg-card">
       <div class="container py-6">
         <div class="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <router-link to="/" class="text-primary hover:opacity-80 transition mb-2 inline-block text-sm">← 返回首頁</router-link>
-            <h1 class="text-3xl font-bold text-foreground">成本分析</h1>
-            <p class="text-sm text-muted-foreground mt-1">詳細的成本統計和預算管理</p>
+          <div class="flex items-center gap-4">
+            <router-link to="/" class="text-primary hover:opacity-80 transition text-sm flex-shrink-0">← 返回首頁</router-link>
+            <div>
+              <h1 class="text-3xl font-bold text-foreground">成本分析</h1>
+              <p class="text-sm text-muted-foreground mt-1">詳細的成本統計和預算管理</p>
+            </div>
           </div>
           <div class="flex gap-2">
             <button
@@ -15,6 +17,12 @@
               class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
             >
               ⚙ 預算設定
+            </button>
+            <button
+              @click="exportPDF"
+              class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
+            >
+              匯出 PDF
             </button>
             <button
               @click="exportCSV"
@@ -28,7 +36,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="container py-8">
+    <main id="cost-analysis-content" class="container py-8">
       <!-- Filters -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
@@ -169,7 +177,7 @@
 
       <!-- Cost Trend Chart (30 days) -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
-        <h2 class="text-lg font-semibold text-foreground mb-4">過去 30 天成本趨勢</h2>
+        <h2 class="text-lg font-semibold text-foreground mb-4">篩選期間成本趨勢</h2>
         <!-- Summary stats -->
         <div class="grid grid-cols-4 gap-4 mb-6">
           <div class="bg-secondary rounded-lg p-4">
@@ -414,6 +422,7 @@ import { getMockData, filterRecordsByDateRange, filterRecordsByModels, getAvaila
 import { calculateTotalCost, formatCostCompact, formatCost, calculateRecordCost } from '../utils/costCalculator'
 import { useBudgetStore } from '../stores/budgetStore'
 import { exportCostAnalysisToCSV, downloadCSV } from '../utils/csvExport'
+import { exportElementToPDF } from '../utils/pdfExport'
 import type { TokenRecord, Department, DepartmentStats } from '../types'
 
 const budgetStore = useBudgetStore()
@@ -499,20 +508,27 @@ function getDeptUsageRate(deptId: string): number {
   return cost / budget
 }
 
-// 30-day trend
+// Cost trend - now uses filtered records and respects date/model filters
 const last30DaysTrend = computed(() => {
   const days: Array<{ date: string; cost: number }> = []
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
+  const startDate = new Date(dateRange.value.startDate)
+  const endDate = new Date(dateRange.value.endDate)
+  const diffDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+  const totalDays = Math.max(diffDays, 1)
+  for (let i = 0; i <= totalDays; i++) {
+    const d = new Date(startDate)
+    d.setDate(d.getDate() + i)
     const dateStr = d.toISOString().split('T')[0]
-    const dayRecords = tokenRecords.value.filter((r) => r.date === dateStr)
+    const dayRecords = filteredRecords.value.filter((r) => r.date === dateStr)
     days.push({ date: dateStr.slice(5), cost: calculateTotalCost(dayRecords) })
   }
   return days
 })
 const trendTotalCost = computed(() => last30DaysTrend.value.reduce((s, d) => s + d.cost, 0))
-const trendAvgCost = computed(() => trendTotalCost.value / 30)
+const trendAvgCost = computed(() => {
+  const days = last30DaysTrend.value.length
+  return days > 0 ? trendTotalCost.value / days : 0
+})
 const trendMaxCost = computed(() => Math.max(...last30DaysTrend.value.map((d) => d.cost), 0.01))
 const trendMinCost = computed(() => {
   const nonZero = last30DaysTrend.value.filter((d) => d.cost > 0)
@@ -598,6 +614,19 @@ function saveBudgetSettings() {
     budgetStore.setDepartmentBudget(dept.id, editDeptBudgets[dept.id])
   })
   showBudgetModal.value = false
+}
+
+// PDF export
+const isExportingPDF = ref(false)
+async function exportPDF() {
+  isExportingPDF.value = true
+  try {
+    await exportElementToPDF('cost-analysis-content', `cost-analysis-${new Date().toISOString().split('T')[0]}.pdf`)
+  } catch (e) {
+    console.error('PDF export failed:', e)
+  } finally {
+    isExportingPDF.value = false
+  }
 }
 
 // CSV export

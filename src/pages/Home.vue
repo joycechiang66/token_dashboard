@@ -10,6 +10,12 @@
           </div>
           <div class="flex gap-2">
             <button
+              @click="exportPDF"
+              class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
+            >
+              匯出 PDF
+            </button>
+            <button
               @click="exportCSV"
               class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
             >
@@ -27,7 +33,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="container py-8">
+    <main id="home-main-content" class="container py-8">
       <!-- Top Alert -->
       <TopBudgetAlert v-if="topAlerts.length > 0" :alerts="topAlerts" class="mb-6" />
 
@@ -285,6 +291,7 @@ import { calculateTotalCost, formatCostCompact } from '../utils/costCalculator'
 import { calculateDepartmentEfficiencies, getEfficiencyRating } from '../utils/efficiencyCalculator'
 import { useBudgetStore } from '../stores/budgetStore'
 import { exportCompanySummaryToCSV, downloadCSV } from '../utils/csvExport'
+import { exportElementToPDF } from '../utils/pdfExport'
 import TopBudgetAlert from '../components/TopBudgetAlert.vue'
 import type { TokenRecord, Department, Employee, DepartmentStats } from '../types'
 
@@ -451,6 +458,18 @@ const topAlerts = computed(() => {
 function exportCSV() {
   const csv = exportCompanySummaryToCSV(departments.value, departmentStats.value)
   downloadCSV(csv, `company-summary-${new Date().toISOString().split('T')[0]}.csv`)
+}
+
+const isExportingPDF = ref(false)
+async function exportPDF() {
+  isExportingPDF.value = true
+  try {
+    await exportElementToPDF('home-main-content', `company-summary-${new Date().toISOString().split('T')[0]}.pdf`)
+  } catch (e) {
+    console.error('PDF export failed:', e)
+  } finally {
+    isExportingPDF.value = false
+  }
 }
 
 function formatNumber(num: number): string {

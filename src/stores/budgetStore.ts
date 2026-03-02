@@ -1,15 +1,41 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+
+const STORAGE_KEY = 'token-dashboard-budget'
+
+interface StoredBudget {
+  companyBudget: number
+  departmentBudgets: Record<string, number>
+}
+
+function loadFromStorage(): StoredBudget | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch { /* ignore */ }
+  return null
+}
+
+function saveToStorage(data: StoredBudget) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  } catch { /* ignore */ }
+}
+
+const defaultCompanyBudget = 10000
+const defaultDepartmentBudgets: Record<string, number> = {
+  'dept-1': 2000,
+  'dept-2': 3000,
+  'dept-3': 1500,
+  'dept-4': 1500,
+  'dept-5': 1000,
+}
 
 export const useBudgetStore = defineStore('budget', () => {
-  const companyBudget = ref(10000)
-  const departmentBudgets = ref<Record<string, number>>({
-    'dept-1': 2000,
-    'dept-2': 3000,
-    'dept-3': 1500,
-    'dept-4': 1500,
-    'dept-5': 1000,
-  })
+  const stored = loadFromStorage()
+
+  const companyBudget = ref(stored?.companyBudget ?? defaultCompanyBudget)
+  const departmentBudgets = ref<Record<string, number>>(stored?.departmentBudgets ?? { ...defaultDepartmentBudgets })
 
   const budgetHistory = ref<Array<{ month: string; cost: number; budget: number }>>([
     { month: '2025-11', cost: 8500, budget: 10000 },
@@ -25,6 +51,14 @@ export const useBudgetStore = defineStore('budget', () => {
     { month: '2026-09', cost: 9300, budget: 10000 },
     { month: '2026-10', cost: 8400, budget: 10000 },
   ])
+
+  // 監聽變化自動存入 localStorage
+  watch([companyBudget, departmentBudgets], () => {
+    saveToStorage({
+      companyBudget: companyBudget.value,
+      departmentBudgets: departmentBudgets.value,
+    })
+  }, { deep: true })
 
   function setCompanyBudget(budget: number) {
     companyBudget.value = budget

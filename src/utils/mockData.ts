@@ -27,30 +27,50 @@ const employees: Employee[] = [
 
 const models = ['GPT-4', 'Claude', 'Gemini', 'GPT-3.5', 'Llama-2', 'Mistral', 'Qwen', 'Yi']
 
+// 使用固定種子的偽隨機數生成器，確保每次載入資料一致
+function seededRandom(seed: number): () => number {
+  let s = seed
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0xffffffff
+    return (s >>> 0) / 0xffffffff
+  }
+}
+
+let cachedRecords: TokenRecord[] | null = null
+
 function generateTokenRecords(): TokenRecord[] {
+  if (cachedRecords) return cachedRecords
+
   const records: TokenRecord[] = []
-  const now = new Date()
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const random = seededRandom(42)
+
+  // 以 2026-03-02 為基準，往前 30 天
+  const baseDate = new Date('2026-03-02T00:00:00Z')
+  const thirtyDaysAgo = new Date(baseDate.getTime() - 30 * 24 * 60 * 60 * 1000)
 
   for (let i = 0; i < 500; i++) {
     const randomDate = new Date(
-      thirtyDaysAgo.getTime() + Math.random() * (now.getTime() - thirtyDaysAgo.getTime())
+      thirtyDaysAgo.getTime() + random() * (baseDate.getTime() - thirtyDaysAgo.getTime())
     )
-    const employee = employees[Math.floor(Math.random() * employees.length)]
-    const model = models[Math.floor(Math.random() * models.length)]
+    const employee = employees[Math.floor(random() * employees.length)]
+    const model = models[Math.floor(random() * models.length)]
 
     records.push({
       id: `record-${i}`,
       employeeId: employee.id,
       departmentId: employee.departmentId,
       model,
-      inputTokens: Math.floor(Math.random() * 5000) + 100,
-      outputTokens: Math.floor(Math.random() * 2000) + 50,
+      inputTokens: Math.floor(random() * 5000) + 100,
+      outputTokens: Math.floor(random() * 2000) + 50,
       timestamp: randomDate.toISOString(),
       date: randomDate.toISOString().split('T')[0],
     })
   }
 
+  // 按日期排序（新到舊）
+  records.sort((a, b) => b.date.localeCompare(a.date))
+
+  cachedRecords = records
   return records
 }
 

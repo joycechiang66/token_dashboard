@@ -11,6 +11,12 @@
           </div>
           <div class="flex gap-2">
             <button
+              @click="exportDeptPDF"
+              class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
+            >
+              匯出 PDF
+            </button>
+            <button
               @click="exportDeptCSV"
               class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
             >
@@ -22,7 +28,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="container py-8">
+    <main id="dept-main-content" class="container py-8">
       <!-- Filters -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
@@ -246,6 +252,7 @@ import { getMockData, filterRecordsByDateRange, filterRecordsByModels, getDepart
 import { calculateTotalCost, formatCostCompact, formatCost, calculateRecordCost } from '../utils/costCalculator'
 import { calculateEmployeeEfficiencies, getEfficiencyRating } from '../utils/efficiencyCalculator'
 import { exportDepartmentSummaryToCSV, exportEmployeeDetailsToCSV, downloadCSV } from '../utils/csvExport'
+import { exportElementToPDF } from '../utils/pdfExport'
 import type { TokenRecord, Department, DepartmentStats } from '../types'
 
 const route = useRoute()
@@ -330,7 +337,10 @@ const employeeEfficiencies = computed(() =>
 const employeeRecords = computed(() => {
   const map = new Map<string, TokenRecord[]>()
   departmentEmployees.value.forEach((emp) => {
-    map.set(emp.id, filteredDeptRecords.value.filter((r) => r.employeeId === emp.id))
+    const records = filteredDeptRecords.value
+      .filter((r) => r.employeeId === emp.id)
+      .sort((a, b) => b.date.localeCompare(a.date))
+    map.set(emp.id, records)
   })
   return map
 })
@@ -386,6 +396,18 @@ function exportEmployeeCSV(employeeId: string, employeeName: string) {
   const records = employeeRecords.value.get(employeeId) || []
   const csv = exportEmployeeDetailsToCSV(employeeName, records)
   downloadCSV(csv, `employee-${employeeName}-${new Date().toISOString().split('T')[0]}.csv`)
+}
+
+const isExportingPDF = ref(false)
+async function exportDeptPDF() {
+  isExportingPDF.value = true
+  try {
+    await exportElementToPDF('dept-main-content', `dept-${department.value?.name}-${new Date().toISOString().split('T')[0]}.pdf`)
+  } catch (e) {
+    console.error('PDF export failed:', e)
+  } finally {
+    isExportingPDF.value = false
+  }
 }
 
 function formatNumber(num: number): string {
