@@ -19,6 +19,7 @@ import ModelFilter from '@/components/ModelFilter';
 import ExportButton from '@/components/ExportButton';
 import { exportDepartmentSummaryCSV, exportModelBreakdownCSV, exportEmployeeDetailCSV } from '@/lib/csvExport';
 import { calculateModelCost, formatCostCompact } from '@/lib/costCalculator';
+import CostTrendChart from '@/components/CostTrendChart';
 
 export default function DepartmentDetail() {
   const [location, setLocation] = useLocation();
@@ -90,6 +91,13 @@ export default function DepartmentDetail() {
   const departmentCost = departmentFilteredRecords.reduce((total, record) => {
     return total + calculateModelCost(record.model, record.inputTokens, record.outputTokens);
   }, 0);
+  
+  // Get all department records for trend chart (not filtered by date range)
+  const allDepartmentRecords: TokenRecord[] = department.employees.flatMap((emp) => emp.tokenRecords);
+  // Filter by model if selected
+  const trendChartRecords = selectedModels.length > 0
+    ? allDepartmentRecords.filter((r) => selectedModels.includes(r.model))
+    : allDepartmentRecords;
 
   // Sort employees by total tokens (descending)
   const sortedEmployees = [...filteredEmployees].sort((a, b) => b.totalTokens - a.totalTokens);
@@ -188,6 +196,11 @@ export default function DepartmentDetail() {
               <p className="text-xs text-muted-foreground mt-2">基於當前篩選條件</p>
             </Card>
           </div>
+        </div>
+
+        {/* Cost Trend Chart */}
+        <div className="mb-12">
+          <CostTrendChart records={trendChartRecords} title="過去 30 天成本趨勢" height={350} />
         </div>
 
         {/* Employees List */}
