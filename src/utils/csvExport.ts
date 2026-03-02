@@ -1,4 +1,4 @@
-import type { TokenRecord, DepartmentStats } from '../types'
+import type { TokenRecord, Department, DepartmentStats } from '../types'
 import { calculateRecordCost, formatCost } from './costCalculator'
 
 function escapeCSV(value: string | number): string {
@@ -7,6 +7,27 @@ function escapeCSV(value: string | number): string {
     return `"${stringValue.replace(/"/g, '""')}"`
   }
   return stringValue
+}
+
+// 公司整體摘要 CSV（首頁使用）
+export function exportCompanySummaryToCSV(
+  departments: Department[],
+  stats: Record<string, DepartmentStats>
+): string {
+  const lines: string[] = []
+  lines.push('公司 Token 使用量摘要報告')
+  lines.push(`生成時間: ${new Date().toLocaleString('zh-TW')}`)
+  lines.push('')
+  lines.push('部門名稱,總 Token 數,輸入 Token,輸出 Token,預估成本,使用記錄數')
+  departments.forEach((dept) => {
+    const s = stats[dept.id]
+    if (s) {
+      lines.push(
+        `${escapeCSV(dept.name)},${s.totalTokens},${s.inputTokens},${s.outputTokens},${formatCost(s.cost)},${s.recordCount}`
+      )
+    }
+  })
+  return lines.join('\n')
 }
 
 export function exportDepartmentSummaryToCSV(
@@ -78,8 +99,38 @@ export function exportEmployeeDetailsToCSV(
   return lines.join('\n')
 }
 
+// 成本分析頁 CSV
+export function exportCostAnalysisToCSV(
+  records: TokenRecord[],
+  departments: Department[],
+  stats: Record<string, DepartmentStats>
+): string {
+  const lines: string[] = []
+  lines.push('成本分析報告')
+  lines.push(`生成時間: ${new Date().toLocaleString('zh-TW')}`)
+  lines.push('')
+  lines.push('部門成本對比')
+  lines.push('部門名稱,總 Token 數,預估成本,使用記錄數')
+  departments.forEach((dept) => {
+    const s = stats[dept.id]
+    if (s) {
+      lines.push(`${escapeCSV(dept.name)},${s.totalTokens},${formatCost(s.cost)},${s.recordCount}`)
+    }
+  })
+  lines.push('')
+  lines.push('詳細記錄')
+  lines.push('日期,部門,員工ID,模型,輸入 Token,輸出 Token,預估成本')
+  records.forEach((record) => {
+    const dept = departments.find((d) => d.id === record.departmentId)
+    lines.push(
+      `${record.date},${escapeCSV(dept?.name || record.departmentId)},${record.employeeId},${record.model},${record.inputTokens},${record.outputTokens},${formatCost(calculateRecordCost(record))}`
+    )
+  })
+  return lines.join('\n')
+}
+
 export function downloadCSV(content: string, fileName: string): void {
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
+  const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8;' })
   const link = document.createElement('a')
   const url = URL.createObjectURL(blob)
 
