@@ -37,8 +37,8 @@ export const useAuthStore = defineStore('auth', () => {
   function logout() {
     user.value = null
     localStorage.removeItem('token-dashboard-user')
-    // 登出後通常由 UI 層決定跳轉，或在此處強制重新整理/跳轉
-    window.location.href = '/login'
+    // 登出後重新導向至登入頁
+    window.location.href = '/token_dashboard/#/login'
   }
 
   return {
