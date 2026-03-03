@@ -5,8 +5,11 @@
 ## 🚀 專案特點
 
 *   **全方位數據監控**：即時查看總 Token 使用量、成本預估及模型分佈。
+*   **智慧預算警示系統**：
+    *   **全域監控**：自動偵測公司整體與各部門的預算使用率。
+    *   **即時提醒**：當預算使用超過 80% (警告) 或 100% (超支) 時，於首頁與成本分析頁面顯示醒目提示。
 *   **多維度分析**：
-    *   **部門視角**：比較各部門的消耗與效率。
+    *   **部門視角**：比較各部門 (如雲端服務部、系統業務部、專案部等) 的消耗與效率。
     *   **員工視角**：深入了解每位成員的使用習慣與效率排名。
     *   **時間視角**：支援自訂日期範圍篩選 (最近 7/14/30 天)。
 *   **互動式圖表**：整合 Chart.js 提供清晰的趨勢圖與分佈圖。
@@ -20,13 +23,12 @@
 
 *   **核心框架**: [Vue 3](https://vuejs.org/) (Composition API + `<script setup>`)
 *   **語言**: [TypeScript](https://www.typescriptlang.org/)
-*   **建置工具**: [Vite 7](https://vitejs.dev/)
+*   **建置工具**: [Vite](https://vitejs.dev/)
 *   **樣式與 UI**: [Tailwind CSS 4](https://tailwindcss.com/)
 *   **狀態管理**: [Pinia](https://pinia.vuejs.org/)
 *   **路由**: [Vue Router 4](https://router.vuejs.org/)
 *   **圖表**: [Chart.js](https://www.chartjs.org/) + [vue-chartjs](https://vue-chartjs.org/)
 *   **工具庫**: 
-    *   `axios` (HTTP 請求)
     *   `date-fns` (日期處理)
     *   `jspdf` & `html2canvas` (PDF 匯出)
 
@@ -35,11 +37,11 @@
 ```
 token_dashboard/
 ├── src/
-│   ├── components/      # 共用元件 (如 ThemeToggle, TopBudgetAlert)
-│   ├── composables/     # 組合式函數 (Hooks)
+│   ├── components/      # 共用元件 (TopBudgetAlert, ThemeToggle, MultiSelectDropdown)
+│   ├── composables/     # 組合式函數 (useBudgetAlerts, useChartTheme)
 │   ├── pages/           # 頁面組件 (Home, DepartmentDetail, CostAnalysis)
 │   ├── router/          # 路由配置
-│   ├── stores/          # Pinia 狀態管理
+│   ├── stores/          # Pinia 狀態管理 (budgetStore)
 │   ├── types/           # TypeScript 型別定義
 │   ├── utils/           # 工具函數 (Mock數據, 計算邏輯, 匯出功能)
 │   ├── App.vue          # 根組件
@@ -67,7 +69,7 @@ token_dashboard/
     ```bash
     npm run dev
     ```
-    啟動後，瀏覽器打開 `http://localhost:3000` (或終端機顯示的埠號) 即可查看。
+    啟動後，瀏覽器打開 `http://localhost:3000` 即可查看。
 
 4.  **建置生產版本**
     ```bash
