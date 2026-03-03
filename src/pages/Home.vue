@@ -22,6 +22,12 @@
             >
               成本分析
             </router-link>
+            <button
+              @click="handleLogout"
+              class="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md hover:opacity-90 transition text-sm"
+            >
+              登出
+            </button>
           </div>
         </div>
       </div>
@@ -291,6 +297,7 @@ import { getMockData, filterRecordsByDateRange, filterRecordsByModels, getAvaila
 import { calculateTotalCost, formatCostCompact } from '../utils/costCalculator'
 import { calculateDepartmentEfficiencies, getEfficiencyRating } from '../utils/efficiencyCalculator'
 import { useBudgetStore } from '../stores/budgetStore'
+import { useAuthStore } from '../stores/auth'
 import { exportCompanySummaryToCSV, downloadCSV } from '../utils/csvExport'
 import { useBudgetAlerts } from '../composables/useBudgetAlerts'
 import TopBudgetAlert from '../components/TopBudgetAlert.vue'
@@ -298,9 +305,17 @@ import ThemeToggle from '../components/ThemeToggle.vue'
 import MultiSelectDropdown from '../components/MultiSelectDropdown.vue'
 import { useChartTheme } from '../composables/useChartTheme'
 import type { TokenRecord, Department, Employee, DepartmentStats } from '../types'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const budgetStore = useBudgetStore()
+const authStore = useAuthStore()
 const { gridColor, textColor, tooltipBg } = useChartTheme()
+
+function handleLogout() {
+  authStore.logout()
+  router.push('/login')
+}
 
 const data = ref(getMockData())
 const departments = ref<Department[]>(data.value.departments)

@@ -260,14 +260,10 @@ function setLast30Days() {
   const end = new Date(); const start = new Date(end); start.setDate(start.getDate() - 30)
   dateRange.value = { startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0] }
 }
-function toggleModel(model: string) {
-  const idx = selectedModels.value.indexOf(model)
-  if (idx >= 0) selectedModels.value.splice(idx, 1)
-  else selectedModels.value.push(model)
+function resetFilters() {
+  setLast30Days()
+  selectedModels.value = [...availableModels.value]
 }
-function selectAllModels() { selectedModels.value = [...availableModels.value] }
-function clearModels() { selectedModels.value = [] }
-function resetFilters() { setLast30Days(); selectedModels.value = [...availableModels.value] }
 
 // All dept records (unfiltered by date/model, just by dept)
 const allDeptRecords = computed(() => tokenRecords.value.filter((r) => r.departmentId === departmentId))
