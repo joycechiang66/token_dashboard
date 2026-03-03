@@ -1,7 +1,7 @@
 <template>
   <div class="mb-8 space-y-3">
     <div
-      v-for="(alert, index) in alerts"
+      v-for="(alert, index) in visibleAlerts"
       :key="index"
       :class="[
         'p-4 rounded-lg border flex items-center justify-between',
@@ -29,7 +29,7 @@
         </p>
       </div>
       <button
-        @click="dismissAlert(index)"
+        @click="dismissAlert(alert)"
         class="text-muted-foreground hover:text-foreground transition"
       >
         ✕
@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 interface Alert {
   type: 'warning' | 'error'
@@ -51,9 +51,19 @@ const props = defineProps<{
   alerts: Alert[]
 }>()
 
-const dismissedIndices = ref<Set<number>>(new Set())
+const dismissedKeys = ref<Set<string>>(new Set())
 
-function dismissAlert(index: number) {
-  dismissedIndices.value.add(index)
+const visibleAlerts = computed(() => {
+  return props.alerts.filter((alert) => !dismissedKeys.value.has(getAlertKey(alert)))
+})
+
+function getAlertKey(alert: Alert) {
+  return `${alert.title}-${alert.message}`
+}
+
+function dismissAlert(alert: Alert) {
+  const newSet = new Set(dismissedKeys.value)
+  newSet.add(getAlertKey(alert))
+  dismissedKeys.value = newSet
 }
 </script>

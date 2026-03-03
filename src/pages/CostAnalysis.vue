@@ -38,6 +38,9 @@
 
     <!-- Main Content -->
     <main id="cost-analysis-content" class="container py-8">
+      <!-- Top Alert -->
+      <TopBudgetAlert v-if="topAlerts.length > 0" :alerts="topAlerts" class="mb-6" />
+
       <!-- Filters -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
@@ -379,6 +382,8 @@ import { calculateTotalCost, formatCostCompact, formatCost, calculateRecordCost 
 import { useBudgetStore } from '../stores/budgetStore'
 import { exportCostAnalysisToCSV, downloadCSV } from '../utils/csvExport'
 import { exportElementToPDF } from '../utils/pdfExport'
+import { useBudgetAlerts } from '../composables/useBudgetAlerts'
+import TopBudgetAlert from '../components/TopBudgetAlert.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import MultiSelectDropdown from '../components/MultiSelectDropdown.vue'
 import { useChartTheme } from '../composables/useChartTheme'
@@ -464,6 +469,8 @@ const departmentStats = computed(() => {
   })
   return stats
 })
+
+const { alerts: topAlerts } = useBudgetAlerts(budgetStore, companyCost, departmentStats, departments)
 
 function getDeptUsageRate(deptId: string): number {
   const cost = departmentStats.value[deptId]?.cost || 0
