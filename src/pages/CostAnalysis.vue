@@ -107,12 +107,8 @@
             {{ (companyUsageRate * 100).toFixed(1) }}%
           </span>
         </div>
-        <div class="flex items-center justify-between text-sm text-muted-foreground mb-3">
-          <span>預算: {{ formatCost(companyBudget) }}</span>
-          <span>已使用: {{ formatCost(companyCost) }}</span>
-          <span :class="companyBudget - companyCost < 0 ? 'text-red-500' : ''">
-            {{ companyBudget - companyCost >= 0 ? '剩餘: ' : '超支: ' }}{{ formatCost(Math.abs(companyBudget - companyCost)) }}
-          </span>
+        <div class="flex justify-end text-sm text-muted-foreground mb-3">
+          <span>{{ formatCost(companyCost) }} / {{ formatCost(companyBudget) }}</span>
         </div>
         <div class="w-full bg-secondary rounded-full h-4 overflow-hidden">
           <div
@@ -155,9 +151,8 @@
                 ]"
               />
             </div>
-            <div class="flex justify-between text-xs text-muted-foreground">
-              <span>{{ formatCost(departmentStats[dept.id]?.cost || 0) }}</span>
-              <span>/ {{ formatCost(budgetStore.getDepartmentBudget(dept.id)) }}</span>
+            <div class="flex justify-end text-xs text-muted-foreground">
+              <span>{{ formatCost(departmentStats[dept.id]?.cost || 0) }} / {{ formatCost(budgetStore.getDepartmentBudget(dept.id)) }}</span>
             </div>
           </div>
         </div>
@@ -187,7 +182,7 @@
         </div>
         <!-- Chart.js Line/Bar chart -->
         <div class="h-64">
-          <Bar
+          <Line
             v-if="trendChartData"
             :data="trendChartData"
             :options="trendChartOptions"
@@ -531,11 +526,14 @@ const trendChartData = computed(() => {
       {
         label: '日成本 (USD)',
         data: data.map((d) => d.cost),
-        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
         borderColor: 'rgba(59, 130, 246, 1)',
-        borderWidth: 1,
-        borderRadius: 4,
-        hoverBackgroundColor: 'rgba(59, 130, 246, 0.9)',
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+        pointRadius: 3,
+        pointHoverRadius: 5,
       },
     ],
   }
