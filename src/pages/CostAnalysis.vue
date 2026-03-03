@@ -18,7 +18,7 @@
               @click="showBudgetModal = true"
               class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
             >
-              ⚙ 預算設定
+              預算設定
             </button>
             <button
               @click="exportCSV"
