@@ -29,6 +29,9 @@ const defaultDepartmentBudgets: Record<string, number> = {
   'dept-3': 1500,
   'dept-4': 1500,
   'dept-5': 1000,
+  'dept-6': 1200,
+  'dept-7': 2500,
+  'dept-8': 2500,
 }
 
 export const useBudgetStore = defineStore('budget', () => {

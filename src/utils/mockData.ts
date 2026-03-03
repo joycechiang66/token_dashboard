@@ -1,11 +1,14 @@
 import type { Department, Employee, TokenRecord } from '../types'
 
 const departments: Department[] = [
-  { id: 'dept-1', name: '產品開發部', description: '負責產品開發和維護' },
-  { id: 'dept-2', name: '數據科學部', description: '負責數據分析和 AI 模型' },
-  { id: 'dept-3', name: '運營部', description: '負責運營和業務支持' },
+  { id: 'dept-1', name: '產品研發部', description: '負責產品開發和維護' },
+  { id: 'dept-2', name: '雲端服務部', description: '負責雲端基礎設施和服務' },
+  { id: 'dept-3', name: '系統業務部', description: '負責系統維運和業務支持' },
   { id: 'dept-4', name: '市場部', description: '負責市場營銷和推廣' },
   { id: 'dept-5', name: '人力資源部', description: '負責人力資源管理' },
+  { id: 'dept-6', name: '財務部', description: '負責公司財務規劃與管理' },
+  { id: 'dept-7', name: '專案一部', description: '負責專案開發與執行' },
+  { id: 'dept-8', name: '專案二部', description: '負責專案開發與執行' },
 ]
 
 // 使用固定種子的偽隨機數生成器，確保每次載入資料一致
@@ -28,6 +31,9 @@ function generateEmployees(): Employee[] {
     { deptId: 'dept-3', count: 20 },
     { deptId: 'dept-4', count: 18 },
     { deptId: 'dept-5', count: 12 },
+    { deptId: 'dept-6', count: 10 },
+    { deptId: 'dept-7', count: 15 },
+    { deptId: 'dept-8', count: 15 },
   ]
   const emps: Employee[] = []
   const rng = seededRandom(123)
