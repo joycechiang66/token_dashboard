@@ -20,12 +20,6 @@
               ⚙ 預算設定
             </button>
             <button
-              @click="exportPDF"
-              class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
-            >
-              匯出 PDF
-            </button>
-            <button
               @click="exportCSV"
               class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
             >
@@ -381,7 +375,6 @@ import { getMockData, filterRecordsByDateRange, filterRecordsByModels, getAvaila
 import { calculateTotalCost, formatCostCompact, formatCost, calculateRecordCost } from '../utils/costCalculator'
 import { useBudgetStore } from '../stores/budgetStore'
 import { exportCostAnalysisToCSV, downloadCSV } from '../utils/csvExport'
-import { exportElementToPDF } from '../utils/pdfExport'
 import { useBudgetAlerts } from '../composables/useBudgetAlerts'
 import TopBudgetAlert from '../components/TopBudgetAlert.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
@@ -418,13 +411,7 @@ function setLast30Days() {
   const end = new Date(); const start = new Date(end); start.setDate(start.getDate() - 30)
   dateRange.value = { startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0] }
 }
-function toggleModel(model: string) {
-  const idx = selectedModels.value.indexOf(model)
-  if (idx >= 0) selectedModels.value.splice(idx, 1)
-  else selectedModels.value.push(model)
-}
-function selectAllModels() { selectedModels.value = [...availableModels.value] }
-function clearModels() { selectedModels.value = [] }
+
 function resetFilters() {
   setLast30Days()
   selectedModels.value = [...availableModels.value]
@@ -521,7 +508,6 @@ const historyAvgRate = computed(() => {
   if (h.length === 0) return 0
   return h.reduce((s, m) => s + (m.cost / m.budget) * 100, 0) / h.length
 })
-const historyMaxBudget = computed(() => Math.max(...budgetHistory.value.map((m) => Math.max(m.cost, m.budget)), 0.01))
 
 // ========== Chart.js: Cost Trend ==========
 const trendChartKey = ref(0)
@@ -761,19 +747,6 @@ function saveBudgetSettings() {
     budgetStore.setDepartmentBudget(dept.id, editDeptBudgets[dept.id])
   })
   showBudgetModal.value = false
-}
-
-// PDF export
-const isExportingPDF = ref(false)
-async function exportPDF() {
-  isExportingPDF.value = true
-  try {
-    await exportElementToPDF('cost-analysis-content', `cost-analysis-${new Date().toISOString().split('T')[0]}.pdf`)
-  } catch (e) {
-    console.error('PDF export failed:', e)
-  } finally {
-    isExportingPDF.value = false
-  }
 }
 
 // CSV export

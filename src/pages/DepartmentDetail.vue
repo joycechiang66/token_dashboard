@@ -12,12 +12,6 @@
           <div class="flex gap-2 items-center">
             <ThemeToggle />
             <button
-              @click="exportDeptPDF"
-              class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
-            >
-              匯出 PDF
-            </button>
-            <button
               @click="exportDeptCSV"
               class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
             >
@@ -233,7 +227,6 @@ import { getMockData, filterRecordsByDateRange, filterRecordsByModels, getDepart
 import { calculateTotalCost, formatCostCompact, formatCost, calculateRecordCost } from '../utils/costCalculator'
 import { calculateEmployeeEfficiencies, getEfficiencyRating } from '../utils/efficiencyCalculator'
 import { exportDepartmentSummaryToCSV, exportEmployeeDetailsToCSV, downloadCSV } from '../utils/csvExport'
-import { exportElementToPDF } from '../utils/pdfExport'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import MultiSelectDropdown from '../components/MultiSelectDropdown.vue'
 import type { TokenRecord, Department, DepartmentStats } from '../types'
@@ -379,18 +372,6 @@ function exportEmployeeCSV(employeeId: string, employeeName: string) {
   const records = employeeRecords.value.get(employeeId) || []
   const csv = exportEmployeeDetailsToCSV(employeeName, records)
   downloadCSV(csv, `employee-${employeeName}-${new Date().toISOString().split('T')[0]}.csv`)
-}
-
-const isExportingPDF = ref(false)
-async function exportDeptPDF() {
-  isExportingPDF.value = true
-  try {
-    await exportElementToPDF('dept-main-content', `dept-${department.value?.name}-${new Date().toISOString().split('T')[0]}.pdf`)
-  } catch (e) {
-    console.error('PDF export failed:', e)
-  } finally {
-    isExportingPDF.value = false
-  }
 }
 
 function formatNumber(num: number): string {

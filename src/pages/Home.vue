@@ -11,12 +11,6 @@
           <div class="flex gap-2 items-center">
             <ThemeToggle />
             <button
-              @click="exportPDF"
-              class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
-            >
-              匯出 PDF
-            </button>
-            <button
               @click="exportCSV"
               class="px-4 py-2 bg-secondary text-foreground rounded-md hover:opacity-90 transition text-sm"
             >
@@ -298,7 +292,6 @@ import { calculateTotalCost, formatCostCompact } from '../utils/costCalculator'
 import { calculateDepartmentEfficiencies, getEfficiencyRating } from '../utils/efficiencyCalculator'
 import { useBudgetStore } from '../stores/budgetStore'
 import { exportCompanySummaryToCSV, downloadCSV } from '../utils/csvExport'
-import { exportElementToPDF } from '../utils/pdfExport'
 import { useBudgetAlerts } from '../composables/useBudgetAlerts'
 import TopBudgetAlert from '../components/TopBudgetAlert.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
@@ -343,20 +336,7 @@ function setLast30Days() {
   start.setDate(start.getDate() - 30)
   dateRange.value = { startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0] }
 }
-function toggleModel(model: string) {
-  const idx = selectedModels.value.indexOf(model)
-  if (idx >= 0) {
-    selectedModels.value.splice(idx, 1)
-  } else {
-    selectedModels.value.push(model)
-  }
-}
-function selectAllModels() {
-  selectedModels.value = [...availableModels.value]
-}
-function clearModels() {
-  selectedModels.value = []
-}
+
 function resetFilters() {
   setLast30Days()
   selectedModels.value = [...availableModels.value]
@@ -444,18 +424,6 @@ const { alerts: topAlerts } = useBudgetAlerts(budgetStore, companyCost, departme
 function exportCSV() {
   const csv = exportCompanySummaryToCSV(departments.value, departmentStats.value)
   downloadCSV(csv, `company-summary-${new Date().toISOString().split('T')[0]}.csv`)
-}
-
-const isExportingPDF = ref(false)
-async function exportPDF() {
-  isExportingPDF.value = true
-  try {
-    await exportElementToPDF('home-main-content', `company-summary-${new Date().toISOString().split('T')[0]}.pdf`)
-  } catch (e) {
-    console.error('PDF export failed:', e)
-  } finally {
-    isExportingPDF.value = false
-  }
 }
 
 // ========== Mini Trend Chart ==========
