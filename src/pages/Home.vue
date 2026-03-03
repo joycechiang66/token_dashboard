@@ -143,7 +143,7 @@
           <h2 class="text-lg font-semibold text-foreground">篩選期間 Token 使用趨勢</h2>
           <div class="flex gap-4 text-sm text-muted-foreground">
             <span>總成本: <strong class="text-foreground">{{ formatCostCompact(companyCost) }}</strong></span>
-            <span>平均日成本: <strong class="text-foreground">${{ trendAvgCost.toFixed(2) }}</strong></span>
+            <span>平均日成本: <strong class="text-foreground">US${{ trendAvgCost.toFixed(2) }}</strong></span>
           </div>
         </div>
         <div class="h-48">

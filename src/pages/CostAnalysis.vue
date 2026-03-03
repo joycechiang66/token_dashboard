@@ -725,7 +725,7 @@ const doughnutChartOptions = computed(() => ({
           const value = ctx.parsed
           const total = ctx.dataset.data.reduce((a: number, b: number) => a + b, 0)
           const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0'
-          return `${ctx.label}: $${value.toFixed(2)} (${pct}%)`
+          return `${ctx.label}: US$${value.toFixed(2)} (${pct}%)`
         },
       },
     },

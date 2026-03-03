@@ -27,17 +27,17 @@ export function calculateModelCost(records: TokenRecord[], model: string): numbe
 }
 
 export function formatCost(cost: number): string {
-  return `$${cost.toFixed(2)}`
+  return `US$${cost.toFixed(2)}`
 }
 
 export function formatCostCompact(cost: number): string {
   if (cost >= 1000000) {
-    return `$${(cost / 1000000).toFixed(1)}M`
+    return `US$${(cost / 1000000).toFixed(1)}M`
   }
   if (cost >= 1000) {
-    return `$${(cost / 1000).toFixed(1)}K`
+    return `US$${(cost / 1000).toFixed(1)}K`
   }
-  return `$${cost.toFixed(2)}`
+  return `US$${cost.toFixed(2)}`
 }
 
 export function getModelPricing(): Record<string, { input: number; output: number }> {
