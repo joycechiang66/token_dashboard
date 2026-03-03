@@ -50,7 +50,7 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: npm run build
+        run: npm run build-only
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
