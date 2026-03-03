@@ -16,6 +16,18 @@
 *   **詳細報表匯出**：支援將數據匯出為 CSV 格式，方便報表製作。
 *   **響應式設計 (RWD)**：完美支援 Desktop、Tablet 與 Mobile 裝置瀏覽。
 *   **現代化 UI/UX**：包含深色模式 (Dark Mode) 切換與流暢的動畫效果。
+*   **角色權限管理 (RBAC)**：
+    *   **管理員 (Admin)**：擁有完整權限，包含預算設定與數據分析。
+    *   **一般用戶 (User)**：僅供查看統計數據，無法修改設定。
+
+## 🔐 測試帳號
+
+為方便測試功能，系統預設提供兩組帳號：
+
+| 角色 | 帳號 | 密碼 | 權限說明 |
+| :--- | :--- | :--- | :--- |
+| **管理員** | `admin` | `admin123` | 可查看所有數據，**可設定預算**。 |
+| **一般用戶** | `user` | `user123` | 僅可查看數據，**無法設定預算**。 |
 
 ## 🛠️ 技術棧
 
@@ -25,8 +37,8 @@
 *   **語言**: [TypeScript](https://www.typescriptlang.org/)
 *   **建置工具**: [Vite](https://vitejs.dev/)
 *   **樣式與 UI**: [Tailwind CSS 4](https://tailwindcss.com/)
-*   **狀態管理**: [Pinia](https://pinia.vuejs.org/)
-*   **路由**: [Vue Router 4](https://router.vuejs.org/)
+*   **狀態管理**: [Pinia](https://pinia.vuejs.org/) (Auth, Budget Store)
+*   **路由**: [Vue Router 4](https://router.vuejs.org/) (含路由守衛)
 *   **圖表**: [Chart.js](https://www.chartjs.org/) + [vue-chartjs](https://vue-chartjs.org/)
 *   **工具庫**: 
     *   `date-fns` (日期處理)
@@ -38,9 +50,9 @@ token_dashboard/
 ├── src/
 │   ├── components/      # 共用元件 (TopBudgetAlert, ThemeToggle, MultiSelectDropdown)
 │   ├── composables/     # 組合式函數 (useBudgetAlerts, useChartTheme)
-│   ├── pages/           # 頁面組件 (Home, DepartmentDetail, CostAnalysis)
-│   ├── router/          # 路由配置
-│   ├── stores/          # Pinia 狀態管理 (budgetStore)
+│   ├── pages/           # 頁面組件 (Home, DepartmentDetail, CostAnalysis, Login)
+│   ├── router/          # 路由配置 (含權限驗證)
+│   ├── stores/          # Pinia 狀態管理 (auth, budgetStore)
 │   ├── types/           # TypeScript 型別定義
 │   ├── utils/           # 工具函數 (Mock數據, 計算邏輯, 匯出功能)
 │   ├── App.vue          # 根組件
