@@ -66,15 +66,16 @@
 token_dashboard/
 ├── src/
 │   ├── components/      # 共用元件 (TopBudgetAlert, ThemeToggle, MultiSelectDropdown)
-│   ├── composables/     # 組合式函數 (useBudgetAlerts, useChartTheme)
+│   ├── composables/     # 組合式函數 (useBudgetAlerts, useChartTheme, useTheme)
 │   ├── pages/           # 頁面組件 (Home, DepartmentDetail, CostAnalysis, Login)
 │   ├── router/          # 路由配置 (含權限驗證)
 │   ├── stores/          # Pinia 狀態管理 (auth, budgetStore)
 │   ├── types/           # TypeScript 型別定義
-│   ├── utils/           # 工具函數 (Mock數據, 計算邏輯, 匯出功能)
+│   ├── utils/           # 工具函數 (Mock數據, 計算邏輯, 匯出功能, 效率計算)
 │   ├── App.vue          # 根組件
-│   └── main.ts          # 入口文件
-├── server/              # 後端 API (Express, Optional)
+│   ├── main.ts          # 入口文件
+│   └── style.css        # 全局樣式 (Tailwind CSS)
+├── server/              # 後端 API (Express, Optional - 用於構建與預覽)
 └── index.html
 ```
 
@@ -95,9 +96,9 @@ token_dashboard/
 
 3.  **啟動開發伺服器**
     ```bash
-    npm run dev
+    pnpm dev
     ```
-    啟動後，瀏覽器打開 `http://localhost:3000` 即可查看。
+    啟動後，請查看終端機顯示的網址（通常為 `http://localhost:5173` 或 `http://localhost:3000`）。
 
 4.  **建置生產版本**
     ```bash
