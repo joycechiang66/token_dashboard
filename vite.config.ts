@@ -7,6 +7,7 @@ import { vitePluginManusRuntime } from 'vite-plugin-manus-runtime'
 const PROJECT_ROOT = import.meta.dirname
 
 export default defineConfig({
+  base: '/token_dashboard/',
   plugins: [vue(), vitePluginManusRuntime()],
   resolve: {
     alias: {
