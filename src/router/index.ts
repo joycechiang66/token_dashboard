@@ -3,6 +3,7 @@ import Home from '../pages/Home.vue'
 import DepartmentDetail from '../pages/DepartmentDetail.vue'
 import CostAnalysis from '../pages/CostAnalysis.vue'
 import Login from '../pages/Login.vue'
+import NotFound from '../pages/NotFound.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
@@ -30,6 +31,12 @@ const routes = [
     component: CostAnalysis,
     meta: { requiresAuth: true }
   },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFound,
+    meta: { requiresAuth: false }
+  }
 ]
 
 const router = createRouter({
