@@ -1,6 +1,7 @@
 # Dependencies
 **/node_modules
 .pnpm-store/
+node_modules
 
 # Build outputs
 dist/
@@ -98,6 +99,9 @@ jspm_packages/
 
 # Temporary folders
 tmp/
+
+# Office temp files
+~$*
 temp/
 
 # Database
