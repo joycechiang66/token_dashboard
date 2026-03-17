@@ -16,6 +16,7 @@ export default defineConfig({
 
   envDir: PROJECT_ROOT,
   root: PROJECT_ROOT,
+  base: '/token_dashboard/',
   build: {
     outDir: path.resolve(PROJECT_ROOT, 'dist/public'),
     emptyOutDir: true,
