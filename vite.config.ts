@@ -2,12 +2,13 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
 import path from 'path'
+import { vitePluginManusRuntime } from 'vite-plugin-manus-runtime'
 
 const PROJECT_ROOT = import.meta.dirname
 
 export default defineConfig({
   base: '/token_dashboard/',
-  plugins: [vue()],
+  plugins: [vue(), vitePluginManusRuntime()],
   resolve: {
     alias: {
       '@': path.resolve(PROJECT_ROOT, 'src'),
