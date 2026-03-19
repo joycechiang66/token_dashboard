@@ -50,18 +50,40 @@
         </div>
         <div class="flex flex-wrap gap-6 items-end">
           <div class="flex gap-4 items-end flex-wrap">
-            <div>
+            <div class="relative min-w-[140px]">
               <label class="block text-sm font-medium text-foreground mb-2">開始日期</label>
-              <input v-model="dateRange.startDate" type="date" class="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm" />
+              <DatePicker
+                v-model="dateRange.startDate"
+                :error="isDateRangeInvalid"
+              />
+              <p v-if="dateRangeError" class="absolute top-full left-0 text-xs text-red-500 mt-1 whitespace-nowrap">{{ dateRangeError }}</p>
             </div>
-            <div>
+            <div class="min-w-[140px]">
               <label class="block text-sm font-medium text-foreground mb-2">結束日期</label>
-              <input v-model="dateRange.endDate" type="date" class="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm" />
+              <DatePicker
+                v-model="dateRange.endDate"
+                :error="isDateRangeInvalid"
+              />
             </div>
             <div class="flex gap-2">
-              <button @click="setLast7Days" class="px-3 py-2 text-sm bg-secondary text-foreground rounded-md hover:opacity-90 transition">最近 7 天</button>
-              <button @click="setLast14Days" class="px-3 py-2 text-sm bg-secondary text-foreground rounded-md hover:opacity-90 transition">最近 14 天</button>
-              <button @click="setLast30Days" class="px-3 py-2 text-sm bg-secondary text-foreground rounded-md hover:opacity-90 transition">最近 30 天</button>
+              <button
+                @click="setLast7Days"
+                :class="['px-3 py-2 text-sm rounded-md transition', activeDateShortcut === 7 ? 'bg-primary text-primary-foreground font-medium shadow-sm' : 'bg-secondary text-foreground hover:opacity-90']"
+              >
+                最近 7 天
+              </button>
+              <button
+                @click="setLast14Days"
+                :class="['px-3 py-2 text-sm rounded-md transition', activeDateShortcut === 14 ? 'bg-primary text-primary-foreground font-medium shadow-sm' : 'bg-secondary text-foreground hover:opacity-90']"
+              >
+                最近 14 天
+              </button>
+              <button
+                @click="setLast30Days"
+                :class="['px-3 py-2 text-sm rounded-md transition', activeDateShortcut === 30 ? 'bg-primary text-primary-foreground font-medium shadow-sm' : 'bg-secondary text-foreground hover:opacity-90']"
+              >
+                最近 30 天
+              </button>
             </div>
           </div>
           <div class="flex gap-3 items-end flex-wrap">
@@ -77,10 +99,25 @@
             </div>
           </div>
         </div>
-        <p class="text-xs text-muted-foreground mt-3">顯示 {{ filteredRecords.length }} 筆記錄（共 {{ tokenRecords.length }} 筆）</p>
+        <div class="mt-6">
+          <p class="text-xs text-muted-foreground">顯示 {{ filteredRecords.length }} 筆記錄（共 {{ tokenRecords.length }} 筆）</p>
+        </div>
       </div>
 
-      <!-- Cost Stats -->
+      <template v-if="filteredRecords.length === 0">
+        <EmptyState>
+          <template #action>
+            <button
+              @click="resetFilters"
+              class="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:opacity-90 transition font-medium"
+            >
+              重置篩選條件
+            </button>
+          </template>
+        </EmptyState>
+      </template>
+      <template v-else>
+        <!-- Cost Stats -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div class="bg-card border border-border rounded-lg p-6">
           <p class="text-sm text-muted-foreground mb-2">篩選期間成本</p>
@@ -296,6 +333,7 @@
           </div>
         </div>
       </div>
+      </template>
     </main>
 
     <!-- Budget Settings Modal -->
@@ -387,6 +425,8 @@ import { useBudgetAlerts } from '../composables/useBudgetAlerts'
 import TopBudgetAlert from '../components/TopBudgetAlert.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import MultiSelectDropdown from '../components/MultiSelectDropdown.vue'
+import DatePicker from '../components/DatePicker.vue'
+import EmptyState from '../components/EmptyState.vue'
 import { useChartTheme } from '../composables/useChartTheme'
 import type { TokenRecord, Department, DepartmentStats } from '../types'
 import { useRouter } from 'vue-router'
@@ -410,12 +450,51 @@ const availableModels = ref<string[]>(getAvailableModels())
 
 // Filters
 const selectedModels = ref<string[]>([...availableModels.value])
-const now = new Date()
-const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-const dateRange = ref({
-  startDate: thirtyDaysAgo.toISOString().split('T')[0],
-  endDate: now.toISOString().split('T')[0],
+const getInitialDateRange = () => {
+  const end = new Date()
+  const start = new Date(end)
+  start.setDate(start.getDate() - 30)
+  return {
+    startDate: start.toISOString().split('T')[0],
+    endDate: end.toISOString().split('T')[0],
+  }
+}
+const dateRange = ref(getInitialDateRange())
+
+const activeDateShortcut = computed(() => {
+  const end = new Date()
+  const endStr = end.toISOString().split('T')[0]
+  if (dateRange.value.endDate !== endStr) return null
+
+  const checkDays = (days: number) => {
+    const start = new Date(end)
+    start.setDate(start.getDate() - days)
+    return dateRange.value.startDate === start.toISOString().split('T')[0]
+  }
+
+  if (checkDays(7)) return 7
+  if (checkDays(14)) return 14
+  if (checkDays(30)) return 30
+  return null
 })
+
+const dateRangeError = computed(() => {
+  const start = new Date(dateRange.value.startDate)
+  const end = new Date(dateRange.value.endDate)
+  if (start > end) {
+    return '選擇錯誤，請重新操作'
+  }
+  
+  const maxEnd = new Date(start)
+  maxEnd.setFullYear(maxEnd.getFullYear() + 3)
+  if (end > maxEnd) {
+    return '查詢區間最多為 3 年'
+  }
+  
+  return ''
+})
+
+const isDateRangeInvalid = computed(() => !!dateRangeError.value)
 
 function setLast7Days() {
   const end = new Date(); const start = new Date(end); start.setDate(start.getDate() - 7)
@@ -437,6 +516,10 @@ function resetFilters() {
 
 // Filtered records
 const filteredRecords = computed(() => {
+  if (isDateRangeInvalid.value) {
+    return []
+  }
+
   let records = tokenRecords.value
   records = filterRecordsByDateRange(records, dateRange.value.startDate, dateRange.value.endDate)
   if (selectedModels.value.length === 0) {
@@ -498,7 +581,7 @@ const last30DaysTrend = computed(() => {
     d.setDate(d.getDate() + i)
     const dateStr = d.toISOString().split('T')[0]
     const dayRecords = filteredRecords.value.filter((r) => r.date === dateStr)
-    days.push({ date: dateStr.slice(5), cost: calculateTotalCost(dayRecords) })
+    days.push({ date: dateStr.slice(5).replace('-', '/'), cost: calculateTotalCost(dayRecords) })
   }
   return days
 })

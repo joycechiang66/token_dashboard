@@ -39,26 +39,40 @@
         <div class="flex flex-wrap gap-6 items-end">
           <!-- Date Range -->
           <div class="flex gap-4 items-end flex-wrap">
-            <div>
+            <div class="relative min-w-[140px]">
               <label class="block text-sm font-medium text-foreground mb-2">開始日期</label>
-              <input
+              <DatePicker
                 v-model="dateRange.startDate"
-                type="date"
-                class="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm"
+                :error="isDateRangeInvalid"
               />
+              <p v-if="dateRangeError" class="absolute top-full left-0 text-xs text-red-500 mt-1 whitespace-nowrap">{{ dateRangeError }}</p>
             </div>
-            <div>
+            <div class="min-w-[140px]">
               <label class="block text-sm font-medium text-foreground mb-2">結束日期</label>
-              <input
+              <DatePicker
                 v-model="dateRange.endDate"
-                type="date"
-                class="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm"
+                :error="isDateRangeInvalid"
               />
             </div>
             <div class="flex gap-2">
-              <button @click="setLast7Days" class="px-3 py-2 text-sm bg-secondary text-foreground rounded-md hover:opacity-90 transition">最近 7 天</button>
-              <button @click="setLast14Days" class="px-3 py-2 text-sm bg-secondary text-foreground rounded-md hover:opacity-90 transition">最近 14 天</button>
-              <button @click="setLast30Days" class="px-3 py-2 text-sm bg-secondary text-foreground rounded-md hover:opacity-90 transition">最近 30 天</button>
+              <button
+                @click="setLast7Days"
+                :class="['px-3 py-2 text-sm rounded-md transition', activeDateShortcut === 7 ? 'bg-primary text-primary-foreground font-medium shadow-sm' : 'bg-secondary text-foreground hover:opacity-90']"
+              >
+                最近 7 天
+              </button>
+              <button
+                @click="setLast14Days"
+                :class="['px-3 py-2 text-sm rounded-md transition', activeDateShortcut === 14 ? 'bg-primary text-primary-foreground font-medium shadow-sm' : 'bg-secondary text-foreground hover:opacity-90']"
+              >
+                最近 14 天
+              </button>
+              <button
+                @click="setLast30Days"
+                :class="['px-3 py-2 text-sm rounded-md transition', activeDateShortcut === 30 ? 'bg-primary text-primary-foreground font-medium shadow-sm' : 'bg-secondary text-foreground hover:opacity-90']"
+              >
+                最近 30 天
+              </button>
             </div>
           </div>
 
@@ -76,12 +90,27 @@
             </div>
           </div>
         </div>
-        <p class="text-xs text-muted-foreground mt-3">
-          顯示 {{ filteredDeptRecords.length }} 筆記錄（共 {{ allDeptRecords.length }} 筆）
-        </p>
+        <div class="mt-6">
+          <p class="text-xs text-muted-foreground">
+            顯示 {{ filteredDeptRecords.length }} 筆記錄（共 {{ allDeptRecords.length }} 筆）
+          </p>
+        </div>
       </div>
 
-      <!-- Department Stats -->
+      <template v-if="filteredDeptRecords.length === 0">
+        <EmptyState>
+          <template #action>
+            <button
+              @click="resetFilters"
+              class="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:opacity-90 transition font-medium"
+            >
+              重置篩選條件
+            </button>
+          </template>
+        </EmptyState>
+      </template>
+      <template v-else>
+        <!-- Department Stats -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div class="bg-card border border-border rounded-lg p-5">
           <p class="text-xs text-muted-foreground mb-1">總 Token</p>
@@ -202,11 +231,11 @@
                   </thead>
                   <tbody>
                     <tr
-                      v-for="record in employeeRecords.get(emp.id) || []"
+                      v-for="record in getPaginatedRecords(emp.id)"
                       :key="record.id"
                       class="border-b border-border/50 hover:bg-muted/50 transition last:border-0"
                     >
-                      <td class="py-2 px-3 text-foreground">{{ record.date }}</td>
+                      <td class="py-2 px-3 text-foreground">{{ record.date.replace(/-/g, '/') }}</td>
                       <td class="py-2 px-3 text-foreground">{{ record.model }}</td>
                       <td class="text-right py-2 px-3 text-foreground">{{ formatNumber(record.inputTokens) }}</td>
                       <td class="text-right py-2 px-3 text-foreground">{{ formatNumber(record.outputTokens) }}</td>
@@ -218,10 +247,19 @@
                   </tbody>
                 </table>
               </div>
+              <Pagination
+                v-if="(employeeRecords.get(emp.id) || []).length > 0"
+                :current-page="getEmployeePage(emp.id)"
+                :total-items="(employeeRecords.get(emp.id) || []).length"
+                :items-per-page="ITEMS_PER_PAGE"
+                @update:current-page="(page) => setEmployeePage(emp.id, page)"
+                class="mt-4"
+              />
             </div>
           </div>
         </div>
       </div>
+      </template>
     </main>
   </div>
 </template>
@@ -235,6 +273,9 @@ import { calculateEmployeeEfficiencies, getEfficiencyRating } from '../utils/eff
 import { exportDepartmentSummaryToCSV, exportEmployeeDetailsToCSV, downloadCSV } from '../utils/csvExport'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import MultiSelectDropdown from '../components/MultiSelectDropdown.vue'
+import DatePicker from '../components/DatePicker.vue'
+import EmptyState from '../components/EmptyState.vue'
+import Pagination from '../components/Pagination.vue'
 import type { TokenRecord, Department, DepartmentStats } from '../types'
 
 import { useAuthStore } from '../stores/auth'
@@ -258,12 +299,51 @@ const availableModels = ref<string[]>(getAvailableModels())
 
 // Filters
 const selectedModels = ref<string[]>([...availableModels.value])
-const now = new Date()
-const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-const dateRange = ref({
-  startDate: thirtyDaysAgo.toISOString().split('T')[0],
-  endDate: now.toISOString().split('T')[0],
+const getInitialDateRange = () => {
+  const end = new Date()
+  const start = new Date(end)
+  start.setDate(start.getDate() - 30)
+  return {
+    startDate: start.toISOString().split('T')[0],
+    endDate: end.toISOString().split('T')[0],
+  }
+}
+const dateRange = ref(getInitialDateRange())
+
+const activeDateShortcut = computed(() => {
+  const end = new Date()
+  const endStr = end.toISOString().split('T')[0]
+  if (dateRange.value.endDate !== endStr) return null
+
+  const checkDays = (days: number) => {
+    const start = new Date(end)
+    start.setDate(start.getDate() - days)
+    return dateRange.value.startDate === start.toISOString().split('T')[0]
+  }
+
+  if (checkDays(7)) return 7
+  if (checkDays(14)) return 14
+  if (checkDays(30)) return 30
+  return null
 })
+
+const dateRangeError = computed(() => {
+  const start = new Date(dateRange.value.startDate)
+  const end = new Date(dateRange.value.endDate)
+  if (start > end) {
+    return '選擇錯誤，請重新操作'
+  }
+  
+  const maxEnd = new Date(start)
+  maxEnd.setFullYear(maxEnd.getFullYear() + 3)
+  if (end > maxEnd) {
+    return '查詢區間最多為 3 年'
+  }
+  
+  return ''
+})
+
+const isDateRangeInvalid = computed(() => !!dateRangeError.value)
 
 function setLast7Days() {
   const end = new Date(); const start = new Date(end); start.setDate(start.getDate() - 7)
@@ -287,6 +367,10 @@ const allDeptRecords = computed(() => tokenRecords.value.filter((r) => r.departm
 
 // Filtered records
 const filteredDeptRecords = computed(() => {
+  if (isDateRangeInvalid.value) {
+    return []
+  }
+
   let records = allDeptRecords.value
   records = filterRecordsByDateRange(records, dateRange.value.startDate, dateRange.value.endDate)
   if (selectedModels.value.length === 0) {
@@ -366,7 +450,30 @@ function toggleEmployeeExpanded(employeeId: string) {
     expandedEmployees.value.delete(employeeId)
   } else {
     expandedEmployees.value.add(employeeId)
+    // Reset to page 1 when expanding
+    if (!employeePageMap.value[employeeId]) {
+      employeePageMap.value[employeeId] = 1
+    }
   }
+}
+
+// Pagination
+const employeePageMap = ref<Record<string, number>>({})
+const ITEMS_PER_PAGE = 10
+
+function getEmployeePage(empId: string) {
+  return employeePageMap.value[empId] || 1
+}
+
+function setEmployeePage(empId: string, page: number) {
+  employeePageMap.value[empId] = page
+}
+
+function getPaginatedRecords(empId: string) {
+  const records = employeeRecords.value.get(empId) || []
+  const page = getEmployeePage(empId)
+  const start = (page - 1) * ITEMS_PER_PAGE
+  return records.slice(start, start + ITEMS_PER_PAGE)
 }
 
 // CSV export
