@@ -37,8 +37,8 @@ export const useAuthStore = defineStore('auth', () => {
   function logout() {
     user.value = null
     localStorage.removeItem('token-dashboard-user')
-    // 登出後通常由 UI 層決定跳轉，或在此處強制重新整理/跳轉
-    window.location.href = '/login'
+    // 移除 window.location.href 強制跳轉，讓 UI 層的 vue-router 處理跳轉
+    // 以避免 base URL 問題
   }
 
   return {
