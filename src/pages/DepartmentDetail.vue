@@ -17,6 +17,12 @@
             >
               匯出 CSV
             </button>
+            <button
+              @click="handleLogout"
+              class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-md transition text-sm font-medium"
+            >
+              登出
+            </button>
           </div>
         </div>
       </div>
@@ -230,6 +236,17 @@ import { exportDepartmentSummaryToCSV, exportEmployeeDetailsToCSV, downloadCSV }
 import ThemeToggle from '../components/ThemeToggle.vue'
 import MultiSelectDropdown from '../components/MultiSelectDropdown.vue'
 import type { TokenRecord, Department, DepartmentStats } from '../types'
+
+import { useAuthStore } from '../stores/auth'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
+function handleLogout() {
+  authStore.logout()
+  router.push('/login')
+}
 
 const route = useRoute()
 const departmentId = route.params.id as string
