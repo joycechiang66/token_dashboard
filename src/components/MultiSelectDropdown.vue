@@ -11,6 +11,7 @@
     >
       <span v-if="modelValue.length === 0" class="text-red-500">{{ placeholder }}</span>
       <span v-else-if="modelValue.length === options.length" class="text-foreground">全部模型 ({{ modelValue.length }})</span>
+      <span v-else-if="modelValue.length === 1" class="text-foreground truncate max-w-[150px]">{{ modelValue[0] }}</span>
       <span v-else class="text-foreground">已選擇 {{ modelValue.length }} 個模型</span>
       
       <svg
