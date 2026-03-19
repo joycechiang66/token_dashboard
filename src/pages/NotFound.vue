@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-background px-4">
+  <div class="flex-1 flex items-center justify-center bg-background px-4 py-12">
     <div class="text-center max-w-md w-full">
       <div class="mb-6 text-9xl font-bold text-primary opacity-20">404</div>
       <h1 class="text-3xl font-bold text-foreground mb-4">找不到頁面</h1>

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-background">
+  <div class="flex-1 bg-background flex flex-col">
     <!-- Header -->
     <header class="border-b border-border bg-card">
       <div class="container py-6">

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-background px-4">
+  <div class="flex-1 flex items-center justify-center bg-background px-4 py-12">
     <div class="w-full max-w-md bg-card border border-border rounded-lg shadow-lg p-8">
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold text-foreground mb-2">Token Dashboard</h1>
