@@ -439,6 +439,9 @@ function resetFilters() {
 const filteredRecords = computed(() => {
   let records = tokenRecords.value
   records = filterRecordsByDateRange(records, dateRange.value.startDate, dateRange.value.endDate)
+  if (selectedModels.value.length === 0) {
+    return []
+  }
   if (selectedModels.value.length > 0) {
     records = filterRecordsByModels(records, selectedModels.value)
   }

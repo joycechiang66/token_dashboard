@@ -3,10 +3,13 @@
     <!-- Trigger Button -->
     <button
       @click="toggleDropdown"
-      class="flex items-center justify-between w-full min-w-[200px] px-3 py-2 text-sm bg-background border border-border rounded-md hover:border-primary transition focus:outline-none focus:ring-2 focus:ring-ring"
+      class="flex items-center justify-between w-full min-w-[200px] px-3 py-2 text-sm bg-background border rounded-md transition focus:outline-none focus:ring-2 focus:ring-ring"
+      :class="[
+        modelValue.length === 0 ? 'border-red-500 hover:border-red-600' : 'border-border hover:border-primary'
+      ]"
       type="button"
     >
-      <span v-if="modelValue.length === 0" class="text-muted-foreground">{{ placeholder }}</span>
+      <span v-if="modelValue.length === 0" class="text-red-500">{{ placeholder }}</span>
       <span v-else-if="modelValue.length === options.length" class="text-foreground">全部模型 ({{ modelValue.length }})</span>
       <span v-else class="text-foreground">已選擇 {{ modelValue.length }} 個模型</span>
       
@@ -21,11 +24,15 @@
         stroke-linecap="round"
         stroke-linejoin="round"
         class="ml-2 w-4 h-4 transition-transform duration-200"
-        :class="{ 'rotate-180': isOpen }"
+        :class="[
+          isOpen ? 'rotate-180' : '',
+          modelValue.length === 0 ? 'text-red-500' : ''
+        ]"
       >
         <path d="m6 9 6 6 6-6"/>
       </svg>
     </button>
+    <p v-if="modelValue.length === 0" class="absolute top-full left-0 text-xs text-red-500 mt-1">至少需選一個模型</p>
 
     <!-- Dropdown Content -->
     <div

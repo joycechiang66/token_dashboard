@@ -272,6 +272,9 @@ const allDeptRecords = computed(() => tokenRecords.value.filter((r) => r.departm
 const filteredDeptRecords = computed(() => {
   let records = allDeptRecords.value
   records = filterRecordsByDateRange(records, dateRange.value.startDate, dateRange.value.endDate)
+  if (selectedModels.value.length === 0) {
+    return []
+  }
   if (selectedModels.value.length > 0) {
     records = filterRecordsByModels(records, selectedModels.value)
   }
