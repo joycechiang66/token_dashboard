@@ -650,7 +650,7 @@ const trendChartOptions = computed(() => ({
       padding: 10,
       cornerRadius: 6,
       callbacks: {
-        label: (ctx: any) => `成本: $${ctx.parsed.y.toFixed(2)}`,
+        label: (ctx: any) => `當日成本: US$${ctx.parsed.y.toFixed(2)}`,
       },
     },
   },
@@ -665,7 +665,7 @@ const trendChartOptions = computed(() => ({
       ticks: {
         font: { size: 11 },
         color: textColor.value,
-        callback: (value: any) => `$${Number(value).toFixed(2)}`,
+        callback: (value: any) => `US$${Number(value).toFixed(2)}`,
       },
     },
   },
@@ -720,7 +720,7 @@ const budgetChartOptions = computed(() => ({
       callbacks: {
         label: (ctx: any) => {
           const label = ctx.dataset.label || ''
-          return `${label}: $${ctx.parsed.y.toLocaleString()}`
+          return `${label}: US$${ctx.parsed.y.toLocaleString()}`
         },
       },
     },
@@ -738,7 +738,7 @@ const budgetChartOptions = computed(() => ({
         color: textColor.value,
         callback: (value: any) => {
           const v = Number(value)
-          return v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v}`
+          return v >= 1000 ? `US$${(v / 1000).toFixed(0)}K` : `US$${v}`
         },
       },
     },

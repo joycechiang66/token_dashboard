@@ -567,7 +567,7 @@ const trendChartOptions = computed(() => ({
       padding: 8,
       cornerRadius: 6,
       callbacks: {
-        label: (ctx: any) => `成本: $${ctx.parsed.y.toFixed(2)}`,
+        label: (ctx: any) => `當日成本: US$${ctx.parsed.y.toFixed(2)}`,
       },
     },
   },
@@ -582,7 +582,7 @@ const trendChartOptions = computed(() => ({
       ticks: {
         font: { size: 10 },
         color: textColor.value,
-        callback: (value: any) => `$${Number(value).toFixed(2)}`,
+        callback: (value: any) => `US$${Number(value).toFixed(2)}`,
       },
     },
   },
