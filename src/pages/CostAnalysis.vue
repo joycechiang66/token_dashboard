@@ -128,12 +128,12 @@
           <p class="text-3xl font-bold text-foreground">{{ formatCost(averageDailyCost) }}</p>
         </div>
         <div class="bg-card border border-border rounded-lg p-6">
-          <p class="text-sm text-muted-foreground mb-2">使用記錄數</p>
-          <p class="text-3xl font-bold text-foreground">{{ filteredRecords.length }}</p>
-        </div>
-        <div class="bg-card border border-border rounded-lg p-6">
           <p class="text-sm text-muted-foreground mb-2">總 Token 數</p>
           <p class="text-3xl font-bold text-foreground">{{ formatNumber(totalTokens) }}</p>
+        </div>
+        <div class="bg-card border border-border rounded-lg p-6">
+          <p class="text-sm text-muted-foreground mb-2">使用記錄數</p>
+          <p class="text-3xl font-bold text-foreground">{{ filteredRecords.length }}</p>
         </div>
       </div>
 
