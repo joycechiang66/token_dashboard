@@ -118,7 +118,7 @@
       </template>
       <template v-else>
         <!-- Cost Stats -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div class="bg-card border border-border rounded-lg p-6">
           <p class="text-sm text-muted-foreground mb-2">篩選期間成本</p>
           <p class="text-3xl font-bold text-foreground">{{ formatCostCompact(companyCost) }}</p>
@@ -130,6 +130,10 @@
         <div class="bg-card border border-border rounded-lg p-6">
           <p class="text-sm text-muted-foreground mb-2">使用記錄數</p>
           <p class="text-3xl font-bold text-foreground">{{ filteredRecords.length }}</p>
+        </div>
+        <div class="bg-card border border-border rounded-lg p-6">
+          <p class="text-sm text-muted-foreground mb-2">總 Token 數</p>
+          <p class="text-3xl font-bold text-foreground">{{ formatNumber(totalTokens) }}</p>
         </div>
       </div>
 
@@ -535,6 +539,7 @@ const filteredRecords = computed(() => {
 const companyCost = computed(() => calculateTotalCost(filteredRecords.value))
 const companyBudget = computed(() => budgetStore.getCompanyBudget())
 const companyUsageRate = computed(() => companyCost.value / companyBudget.value)
+const totalTokens = computed(() => filteredRecords.value.reduce((sum, r) => sum + r.inputTokens + r.outputTokens, 0))
 
 const averageDailyCost = computed(() => {
   const days = Math.max(
