@@ -169,6 +169,15 @@
       <!-- Department Budget Status -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
         <h2 class="text-lg font-semibold text-foreground mb-6">部門預算狀態</h2>
+        <div
+          v-if="overBudgetDepartments.length > 0"
+          class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"
+        >
+          <p class="font-semibold text-red-800">目前有 {{ overBudgetDepartments.length }} 個部門超支</p>
+          <p class="text-red-700 text-sm mt-1">
+            {{ overBudgetDepartments.map((dept) => dept.name).join('、') }}，請盡快調整預算或降低使用量。
+          </p>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div
             v-for="dept in departments"
@@ -567,6 +576,10 @@ const departmentStats = computed(() => {
 })
 
 const { alerts: topAlerts } = useBudgetAlerts(budgetStore, companyCost, departmentStats, departments)
+
+const overBudgetDepartments = computed(() => {
+  return departments.value.filter((dept) => getDeptUsageRate(dept.id) >= 1)
+})
 
 function getDeptUsageRate(deptId: string): number {
   const cost = departmentStats.value[deptId]?.cost || 0
