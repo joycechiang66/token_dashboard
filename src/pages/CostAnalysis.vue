@@ -144,12 +144,12 @@
           <span
             :class="[
               'px-3 py-1 rounded text-sm font-medium',
-              companyUsageRate >= 1 ? 'bg-red-100 text-red-800' :
-              companyUsageRate >= 0.8 ? 'bg-yellow-100 text-yellow-800' :
+              companyUsageRate > 1 ? 'bg-red-100 text-red-800' :
+              companyUsageRate > 0.8 ? 'bg-yellow-100 text-yellow-800' :
               'bg-green-100 text-green-800',
             ]"
           >
-            {{ (companyUsageRate * 100).toFixed(1) }}%
+            {{ formatUsageRate(companyUsageRate) }}
           </span>
         </div>
         <div class="flex justify-end text-sm text-muted-foreground mb-3">
@@ -160,7 +160,7 @@
             :style="{ width: Math.min(companyUsageRate * 100, 100) + '%' }"
             :class="[
               'h-full transition-all rounded-full',
-              companyUsageRate >= 1 ? 'bg-red-500' : companyUsageRate >= 0.8 ? 'bg-yellow-500' : 'bg-green-500',
+              companyUsageRate > 1 ? 'bg-red-500' : companyUsageRate > 0.8 ? 'bg-yellow-500' : 'bg-green-500',
             ]"
           />
         </div>
@@ -169,15 +169,6 @@
       <!-- Department Budget Status -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
         <h2 class="text-lg font-semibold text-foreground mb-6">部門預算狀態</h2>
-        <div
-          v-if="overBudgetDepartments.length > 0"
-          class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"
-        >
-          <p class="font-semibold text-red-800">目前有 {{ overBudgetDepartments.length }} 個部門超支</p>
-          <p class="text-red-700 text-sm mt-1">
-            {{ overBudgetDepartments.map((dept) => dept.name).join('、') }}，請盡快調整預算或降低使用量。
-          </p>
-        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div
             v-for="dept in departments"
@@ -189,19 +180,19 @@
               <span
                 :class="[
                   'px-2 py-0.5 rounded text-xs font-medium',
-                  getDeptUsageRate(dept.id) >= 1 ? 'bg-red-100 text-red-800' :
-                  getDeptUsageRate(dept.id) >= 0.8 ? 'bg-yellow-100 text-yellow-800' :
+                  getDeptUsageRate(dept.id) > 1 ? 'bg-red-100 text-red-800' :
+                  getDeptUsageRate(dept.id) > 0.8 ? 'bg-yellow-100 text-yellow-800' :
                   'bg-green-100 text-green-800',
                 ]"
-              >{{ (getDeptUsageRate(dept.id) * 100).toFixed(1) }}%</span>
+              >{{ formatUsageRate(getDeptUsageRate(dept.id)) }}</span>
             </div>
             <div class="w-full bg-secondary rounded-full h-2.5 overflow-hidden mb-2">
               <div
                 :style="{ width: Math.min(getDeptUsageRate(dept.id) * 100, 100) + '%' }"
                 :class="[
                   'h-full transition-all rounded-full',
-                  getDeptUsageRate(dept.id) >= 1 ? 'bg-red-500' :
-                  getDeptUsageRate(dept.id) >= 0.8 ? 'bg-yellow-500' : 'bg-green-500',
+                  getDeptUsageRate(dept.id) > 1 ? 'bg-red-500' :
+                  getDeptUsageRate(dept.id) > 0.8 ? 'bg-yellow-500' : 'bg-green-500',
                 ]"
               />
             </div>
@@ -547,7 +538,7 @@ const filteredRecords = computed(() => {
 // Stats
 const companyCost = computed(() => calculateTotalCost(filteredRecords.value))
 const companyBudget = computed(() => budgetStore.getCompanyBudget())
-const companyUsageRate = computed(() => companyCost.value / companyBudget.value)
+const companyUsageRate = computed(() => getUsageRate(companyCost.value, companyBudget.value))
 const totalTokens = computed(() => filteredRecords.value.reduce((sum, r) => sum + r.inputTokens + r.outputTokens, 0))
 
 const averageDailyCost = computed(() => {
@@ -577,14 +568,21 @@ const departmentStats = computed(() => {
 
 const { alerts: topAlerts } = useBudgetAlerts(budgetStore, companyCost, departmentStats, departments)
 
-const overBudgetDepartments = computed(() => {
-  return departments.value.filter((dept) => getDeptUsageRate(dept.id) >= 1)
-})
-
 function getDeptUsageRate(deptId: string): number {
   const cost = departmentStats.value[deptId]?.cost || 0
-  const budget = budgetStore.getDepartmentBudget(deptId) || 1
+  const budget = budgetStore.getDepartmentBudget(deptId)
+  return getUsageRate(cost, budget)
+}
+
+function getUsageRate(cost: number, budget: number): number {
+  if (budget <= 0) {
+    return cost > 0 ? Number.POSITIVE_INFINITY : 0
+  }
   return cost / budget
+}
+
+function formatUsageRate(rate: number): string {
+  return Number.isFinite(rate) ? `${(rate * 100).toFixed(1)}%` : '∞%'
 }
 
 // Cost trend - now uses filtered records and respects date/model filters

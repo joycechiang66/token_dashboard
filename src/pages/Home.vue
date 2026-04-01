@@ -283,7 +283,7 @@
                   getBudgetStatus(dept.id) === 'critical' ? 'bg-red-500' :
                   getBudgetStatus(dept.id) === 'warning' ? 'bg-yellow-500' : 'bg-green-500',
                 ]"
-                :style="{ width: Math.min(parseFloat(getBudgetUsageRate(dept.id)), 100) + '%' }"
+                :style="{ width: getBudgetUsageWidth(dept.id) + '%' }"
               />
             </div>
           </div>
@@ -479,13 +479,16 @@ const maxEfficiency = computed(() => {
 // Budget helpers
 function getBudgetUsageRate(deptId: string): string {
   const cost = departmentStats.value[deptId]?.cost || 0
-  const budget = budgetStore.getDepartmentBudget(deptId) || 1
-  return ((cost / budget) * 100).toFixed(1)
+  const budget = budgetStore.getDepartmentBudget(deptId)
+  const rate = getUsageRate(cost, budget)
+  return Number.isFinite(rate) ? (rate * 100).toFixed(1) : '∞'
 }
 function getBudgetStatus(deptId: string): 'ok' | 'warning' | 'critical' {
-  const rate = parseFloat(getBudgetUsageRate(deptId))
-  if (rate >= 100) return 'critical'
-  if (rate >= 80) return 'warning'
+  const cost = departmentStats.value[deptId]?.cost || 0
+  const budget = budgetStore.getDepartmentBudget(deptId)
+  const rate = getUsageRate(cost, budget) * 100
+  if (rate > 100) return 'critical'
+  if (rate > 80) return 'warning'
   return 'ok'
 }
 function getBudgetStatusLabel(deptId: string): string {
@@ -493,6 +496,19 @@ function getBudgetStatusLabel(deptId: string): string {
   if (status === 'critical') return '超支'
   if (status === 'warning') return '警告'
   return '正常'
+}
+function getBudgetUsageWidth(deptId: string): number {
+  const cost = departmentStats.value[deptId]?.cost || 0
+  const budget = budgetStore.getDepartmentBudget(deptId)
+  const rate = getUsageRate(cost, budget)
+  return Number.isFinite(rate) ? Math.min(rate * 100, 100) : 100
+}
+
+function getUsageRate(cost: number, budget: number): number {
+  if (budget <= 0) {
+    return cost > 0 ? Number.POSITIVE_INFINITY : 0
+  }
+  return cost / budget
 }
 
 // Alerts
