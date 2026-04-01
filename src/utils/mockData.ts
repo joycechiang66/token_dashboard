@@ -55,33 +55,45 @@ const models = ['GPT-4', 'Claude', 'Gemini', 'GPT-3.5', 'Llama-2', 'Mistral', 'Q
 
 let cachedRecords: TokenRecord[] | null = null
 
+function createTokenRecord(index: number, randomDate: Date, random: () => number): TokenRecord {
+  const employee = employees[Math.floor(random() * employees.length)]
+  const model = models[Math.floor(random() * models.length)]
+
+  return {
+    id: `record-${index}`,
+    employeeId: employee.id,
+    departmentId: employee.departmentId,
+    model,
+    inputTokens: Math.floor(random() * 5000) + 100,
+    outputTokens: Math.floor(random() * 2000) + 50,
+    timestamp: randomDate.toISOString(),
+    date: randomDate.toISOString().split('T')[0],
+  }
+}
+
 function generateTokenRecords(): TokenRecord[] {
   if (cachedRecords) return cachedRecords
 
   const records: TokenRecord[] = []
   const random = seededRandom(42)
 
-  // 以 2026-03-02 為基準，往前 30 天
-  const baseDate = new Date('2026-03-02T00:00:00Z')
-  const thirtyDaysAgo = new Date(baseDate.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const baseDate = new Date()
+  baseDate.setHours(12, 0, 0, 0)
+  const thirtyDaysAgo = new Date(baseDate)
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29)
 
-  for (let i = 0; i < 500; i++) {
+  for (let i = 0; i < 30; i++) {
+    const currentDate = new Date(thirtyDaysAgo)
+    currentDate.setDate(thirtyDaysAgo.getDate() + i)
+    currentDate.setHours(12, Math.floor(random() * 60), 0, 0)
+    records.push(createTokenRecord(i, currentDate, random))
+  }
+
+  for (let i = 30; i < 500; i++) {
     const randomDate = new Date(
       thirtyDaysAgo.getTime() + random() * (baseDate.getTime() - thirtyDaysAgo.getTime())
     )
-    const employee = employees[Math.floor(random() * employees.length)]
-    const model = models[Math.floor(random() * models.length)]
-
-    records.push({
-      id: `record-${i}`,
-      employeeId: employee.id,
-      departmentId: employee.departmentId,
-      model,
-      inputTokens: Math.floor(random() * 5000) + 100,
-      outputTokens: Math.floor(random() * 2000) + 50,
-      timestamp: randomDate.toISOString(),
-      date: randomDate.toISOString().split('T')[0],
-    })
+    records.push(createTokenRecord(i, randomDate, random))
   }
 
   // 按日期排序（新到舊）
