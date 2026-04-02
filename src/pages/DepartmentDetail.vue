@@ -125,14 +125,14 @@
           <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ formatNumber(departmentOutputTokens) }}</p>
         </div>
         <div class="bg-card border border-border rounded-lg p-5">
-          <p class="text-xs text-muted-foreground mb-1">預估成本</p>
+          <p class="text-xs text-muted-foreground mb-1">預估費用</p>
           <p class="text-2xl font-bold text-foreground">{{ formatCostCompact(departmentCost) }}</p>
         </div>
       </div>
 
       <!-- Model Usage Breakdown -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
-        <h2 class="text-xl font-semibold text-foreground mb-4">模型使用分佈</h2>
+        <h2 class="text-xl font-semibold text-foreground mb-4">模型費用分佈</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div
             v-for="model in modelBreakdown"
@@ -181,7 +181,7 @@
                   <div class="flex items-center gap-3">
                     <span class="text-sm text-muted-foreground">{{ formatNumber(emp.totalTokens) }} tokens</span>
                     <span class="text-sm text-muted-foreground">{{ formatCostCompact(emp.cost) }}</span>
-                    <span class="text-sm font-medium text-foreground">{{ emp.efficiency.toFixed(0) }} T/$</span>
+                    <span class="text-sm font-medium text-foreground">{{ emp.efficiency.toFixed(0) }} T/NT$</span>
                     <span
                       :class="[
                         'px-2 py-0.5 rounded text-xs font-medium',
@@ -226,7 +226,7 @@
                       <th class="text-left py-2 px-3 text-xs font-medium text-muted-foreground">模型</th>
                       <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">輸入 Token</th>
                       <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">輸出 Token</th>
-                      <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">成本</th>
+                      <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">費用</th>
                     </tr>
                   </thead>
                   <tbody>

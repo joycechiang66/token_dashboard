@@ -9,16 +9,15 @@ function escapeCSV(value: string | number): string {
   return stringValue
 }
 
-// 公司整體摘要 CSV（首頁使用）
 export function exportCompanySummaryToCSV(
   departments: Department[],
   stats: Record<string, DepartmentStats>
 ): string {
   const lines: string[] = []
-  lines.push('公司 Token 使用量摘要報告')
+  lines.push('公司 Token 使用與費用摘要報告')
   lines.push(`生成時間: ${new Date().toLocaleString('zh-TW')}`)
   lines.push('')
-  lines.push('部門名稱,總 Token 數,輸入 Token,輸出 Token,預估成本,使用記錄數')
+  lines.push('部門名稱,總 Token 數,輸入 Token,輸出 Token,預估費用,使用記錄數')
   departments.forEach((dept) => {
     const s = stats[dept.id]
     if (s) {
@@ -37,24 +36,21 @@ export function exportDepartmentSummaryToCSV(
 ): string {
   const lines: string[] = []
 
-  // Header
-  lines.push(`部門成本分析報告 - ${departmentName}`)
+  lines.push(`部門費用分析報告 - ${departmentName}`)
   lines.push(`生成時間: ${new Date().toLocaleString('zh-TW')}`)
   lines.push('')
 
-  // Summary
   lines.push('部門摘要')
   lines.push(`部門名稱,${escapeCSV(departmentName)}`)
   lines.push(`總 Token 數,${stats.totalTokens}`)
   lines.push(`輸入 Token,${stats.inputTokens}`)
   lines.push(`輸出 Token,${stats.outputTokens}`)
-  lines.push(`預估成本,${formatCost(stats.cost)}`)
+  lines.push(`預估費用,${formatCost(stats.cost)}`)
   lines.push(`使用記錄數,${stats.recordCount}`)
   lines.push('')
 
-  // Model breakdown
-  lines.push('模型使用統計')
-  lines.push('模型,使用次數,總 Token 數,預估成本')
+  lines.push('模型費用統計')
+  lines.push('模型,使用次數,總 Token 數,預估費用')
 
   const modelStats = new Map<string, { count: number; tokens: number; cost: number }>()
   records.forEach((record) => {
@@ -79,14 +75,12 @@ export function exportEmployeeDetailsToCSV(
 ): string {
   const lines: string[] = []
 
-  // Header
   lines.push(`員工詳細記錄 - ${employeeName}`)
   lines.push(`生成時間: ${new Date().toLocaleString('zh-TW')}`)
   lines.push('')
 
-  // Records
   lines.push('使用記錄詳情')
-  lines.push('日期,模型,輸入 Token,輸出 Token,總 Token 數,預估成本')
+  lines.push('日期,模型,輸入 Token,輸出 Token,總 Token 數,預估費用')
 
   records.forEach((record) => {
     const totalTokens = record.inputTokens + record.outputTokens
@@ -99,18 +93,17 @@ export function exportEmployeeDetailsToCSV(
   return lines.join('\n')
 }
 
-// 成本分析頁 CSV
 export function exportCostAnalysisToCSV(
   records: TokenRecord[],
   departments: Department[],
   stats: Record<string, DepartmentStats>
 ): string {
   const lines: string[] = []
-  lines.push('成本分析報告')
+  lines.push('費用分析報告')
   lines.push(`生成時間: ${new Date().toLocaleString('zh-TW')}`)
   lines.push('')
-  lines.push('部門成本對比')
-  lines.push('部門名稱,總 Token 數,預估成本,使用記錄數')
+  lines.push('部門費用對比')
+  lines.push('部門名稱,總 Token 數,預估費用,使用記錄數')
   departments.forEach((dept) => {
     const s = stats[dept.id]
     if (s) {
@@ -119,7 +112,7 @@ export function exportCostAnalysisToCSV(
   })
   lines.push('')
   lines.push('詳細記錄')
-  lines.push('日期,部門,員工ID,模型,輸入 Token,輸出 Token,預估成本')
+  lines.push('日期,部門,員工ID,模型,輸入 Token,輸出 Token,預估費用')
   records.forEach((record) => {
     const dept = departments.find((d) => d.id === record.departmentId)
     lines.push(

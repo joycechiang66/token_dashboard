@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 class="text-3xl font-bold text-foreground">Token 使用量儀表板</h1>
-            <p class="text-sm text-muted-foreground mt-1">公司內部 AI Token 消耗統計與分析</p>
+            <p class="text-sm text-muted-foreground mt-1">公司內部 AI Token 使用與部門費用概況</p>
           </div>
           <div class="flex gap-2 items-center">
             <ThemeToggle />
@@ -17,10 +17,10 @@
               匯出 CSV
             </button>
             <router-link
-              to="/cost-analysis"
+              to="/fee-analysis"
               class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition text-sm"
             >
-              成本分析
+              費用分析
             </router-link>
             <button
               @click="handleLogout"
@@ -138,7 +138,7 @@
           <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ formatNumber(totalOutputTokens) }}</p>
         </div>
         <div class="bg-card border border-border rounded-lg p-5">
-          <p class="text-xs text-muted-foreground mb-1">預估成本</p>
+          <p class="text-xs text-muted-foreground mb-1">預估費用</p>
           <p class="text-2xl font-bold text-foreground">{{ formatCostCompact(companyCost) }}</p>
         </div>
         <div class="bg-card border border-border rounded-lg p-5">
@@ -154,10 +154,10 @@
       <!-- Token Usage Trend Mini Chart -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-foreground">篩選期間 Token 使用趨勢</h2>
+          <h2 class="text-lg font-semibold text-foreground">篩選期間費用趨勢</h2>
           <div class="flex gap-4 text-sm text-muted-foreground">
-            <span>總成本: <strong class="text-foreground">{{ formatCostCompact(companyCost) }}</strong></span>
-            <span>平均日成本: <strong class="text-foreground">US${{ trendAvgCost.toFixed(2) }}</strong></span>
+            <span>總費用: <strong class="text-foreground">{{ formatCostCompact(companyCost) }}</strong></span>
+            <span>平均日費用: <strong class="text-foreground">{{ formatCost(trendAvgCost) }}</strong></span>
           </div>
         </div>
         <div class="h-48">
@@ -174,7 +174,7 @@
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-semibold text-foreground">部門效率排名</h2>
-          <span class="text-xs text-muted-foreground">Token 每美元</span>
+          <span class="text-xs text-muted-foreground">Token / NT$</span>
         </div>
         <div class="space-y-3">
           <div
@@ -199,7 +199,7 @@
                 <div class="flex items-center gap-3">
                   <span class="text-sm text-muted-foreground">{{ formatNumber(dept.totalTokens) }} tokens</span>
                   <span class="text-sm text-muted-foreground">{{ formatCostCompact(dept.cost) }}</span>
-                  <span class="text-sm font-medium text-foreground">{{ dept.efficiency.toFixed(0) }} T/$</span>
+                  <span class="text-sm font-medium text-foreground">{{ dept.efficiency.toFixed(0) }} T/NT$</span>
                   <span
                     :class="[
                       'px-2 py-0.5 rounded text-xs font-medium',
@@ -262,7 +262,7 @@
               </span>
             </div>
             <div class="flex justify-between text-sm">
-              <span class="text-muted-foreground">預估成本</span>
+              <span class="text-muted-foreground">預估費用</span>
               <span class="font-medium text-foreground">{{ formatCostCompact(departmentStats[dept.id]?.cost || 0) }}</span>
             </div>
             <div class="flex justify-between text-sm">
@@ -309,7 +309,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Filler, Tooltip)
 import { getMockData, filterRecordsByDateRange, filterRecordsByModels, getAvailableModels } from '../utils/mockData'
-import { calculateTotalCost, formatCostCompact } from '../utils/costCalculator'
+import { calculateTotalCost, formatCost, formatCostCompact } from '../utils/costCalculator'
 import { calculateDepartmentEfficiencies, getEfficiencyRating } from '../utils/efficiencyCalculator'
 import { useBudgetStore } from '../stores/budgetStore'
 import { useAuthStore } from '../stores/auth'
@@ -553,7 +553,7 @@ const trendChartData = computed(() => {
     labels: data.map((d) => d.date),
     datasets: [
       {
-        label: '日成本 (USD)',
+        label: '日費用（TWD）',
         data: data.map((d) => d.cost),
         borderColor: 'rgba(59, 130, 246, 1)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -583,7 +583,7 @@ const trendChartOptions = computed(() => ({
       padding: 8,
       cornerRadius: 6,
       callbacks: {
-        label: (ctx: any) => `當日成本: US$${ctx.parsed.y.toFixed(2)}`,
+        label: (ctx: any) => `當日費用: ${formatCost(ctx.parsed.y)}`,
       },
     },
   },
@@ -598,7 +598,7 @@ const trendChartOptions = computed(() => ({
       ticks: {
         font: { size: 10 },
         color: textColor.value,
-        callback: (value: any) => `US$${Number(value).toFixed(2)}`,
+        callback: (value: any) => formatCostCompact(Number(value)),
       },
     },
   },

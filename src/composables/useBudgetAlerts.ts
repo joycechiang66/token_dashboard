@@ -1,5 +1,6 @@
 import { computed, type Ref } from 'vue'
 import type { Department, DepartmentStats } from '../types'
+import { formatCost } from '../utils/costCalculator'
 
 interface BudgetStore {
   getCompanyBudget: () => number
@@ -38,8 +39,8 @@ export function useBudgetAlerts(
     if (companyUsageRate > 0.8) {
       result.push({
         type: companyUsageRate > 1 ? 'error' : 'warning',
-        title: companyUsageRate > 1 ? '公司預算已超支' : '公司預算即將用盡',
-        message: `已使用 ${formatUsageRate(companyUsageRate)}，共 $${companyCost.value.toFixed(2)} / $${companyBudget.toFixed(2)}`,
+        title: companyUsageRate > 1 ? '公司費用預算已超支' : '公司費用預算即將用盡',
+        message: `已使用 ${formatUsageRate(companyUsageRate)}，共 ${formatCost(companyCost.value)} / ${formatCost(companyBudget)}`,
       })
     }
 
@@ -51,8 +52,8 @@ export function useBudgetAlerts(
       if (rate > 0.8) {
         result.push({
           type: rate > 1 ? 'error' : 'warning',
-          title: `${dept.name}${rate > 1 ? '預算超支' : '預算即將用盡'}`,
-          message: `已使用 ${formatUsageRate(rate)}，共 $${deptCost.toFixed(2)} / $${deptBudget.toFixed(2)}`,
+          title: `${dept.name}${rate > 1 ? '費用預算超支' : '費用預算即將用盡'}`,
+          message: `已使用 ${formatUsageRate(rate)}，共 ${formatCost(deptCost)} / ${formatCost(deptBudget)}`,
         })
       }
     })

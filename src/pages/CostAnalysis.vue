@@ -7,8 +7,8 @@
           <div class="flex items-center gap-4">
             <router-link to="/" class="text-primary hover:opacity-80 transition text-sm flex-shrink-0">← 返回首頁</router-link>
             <div>
-              <h1 class="text-3xl font-bold text-foreground">成本分析</h1>
-              <p class="text-sm text-muted-foreground mt-1">詳細的成本統計和預算管理</p>
+              <h1 class="text-3xl font-bold text-foreground">費用分析</h1>
+              <p class="text-sm text-muted-foreground mt-1">企業內部 AI 使用費用統計與預算管理</p>
             </div>
           </div>
           <div class="flex gap-2 items-center">
@@ -117,14 +117,14 @@
         </EmptyState>
       </template>
       <template v-else>
-        <!-- Cost Stats -->
+        <!-- Fee Stats -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div class="bg-card border border-border rounded-lg p-6">
-          <p class="text-sm text-muted-foreground mb-2">篩選期間成本</p>
+          <p class="text-sm text-muted-foreground mb-2">篩選期間費用</p>
           <p class="text-3xl font-bold text-foreground">{{ formatCostCompact(companyCost) }}</p>
         </div>
         <div class="bg-card border border-border rounded-lg p-6">
-          <p class="text-sm text-muted-foreground mb-2">平均日成本</p>
+          <p class="text-sm text-muted-foreground mb-2">平均日費用</p>
           <p class="text-3xl font-bold text-foreground">{{ formatCost(averageDailyCost) }}</p>
         </div>
         <div class="bg-card border border-border rounded-lg p-6">
@@ -203,25 +203,25 @@
         </div>
       </div>
 
-      <!-- Cost Trend Chart (30 days) -->
+      <!-- Fee Trend Chart (30 days) -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
-        <h2 class="text-lg font-semibold text-foreground mb-4">篩選期間成本趨勢</h2>
+        <h2 class="text-lg font-semibold text-foreground mb-4">篩選期間費用趨勢</h2>
         <!-- Summary stats -->
         <div class="grid grid-cols-4 gap-4 mb-6">
           <div class="bg-secondary rounded-lg p-4">
-            <p class="text-xs text-muted-foreground mb-1">總成本</p>
+            <p class="text-xs text-muted-foreground mb-1">總費用</p>
             <p class="text-xl font-bold text-foreground">{{ formatCostCompact(trendTotalCost) }}</p>
           </div>
           <div class="bg-secondary rounded-lg p-4">
-            <p class="text-xs text-muted-foreground mb-1">平均日成本</p>
+            <p class="text-xs text-muted-foreground mb-1">平均日費用</p>
             <p class="text-xl font-bold text-foreground">{{ formatCost(trendAvgCost) }}</p>
           </div>
           <div class="bg-secondary rounded-lg p-4">
-            <p class="text-xs text-muted-foreground mb-1">最高日成本</p>
+            <p class="text-xs text-muted-foreground mb-1">最高日費用</p>
             <p class="text-xl font-bold text-foreground">{{ formatCost(trendMaxCost) }}</p>
           </div>
           <div class="bg-secondary rounded-lg p-4">
-            <p class="text-xs text-muted-foreground mb-1">最低日成本</p>
+            <p class="text-xs text-muted-foreground mb-1">最低日費用</p>
             <p class="text-xl font-bold text-foreground">{{ formatCost(trendMinCost) }}</p>
           </div>
         </div>
@@ -238,18 +238,18 @@
 
       <!-- Budget History Chart (12 months) -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
-        <h2 class="text-lg font-semibold text-foreground mb-4">預算使用歷史趨勢（12 個月）</h2>
+        <h2 class="text-lg font-semibold text-foreground mb-4">費用與預算歷史趨勢（12 個月）</h2>
         <div class="grid grid-cols-4 gap-4 mb-6">
           <div class="bg-secondary rounded-lg p-4">
-            <p class="text-xs text-muted-foreground mb-1">平均月成本</p>
+            <p class="text-xs text-muted-foreground mb-1">平均月費用</p>
             <p class="text-xl font-bold text-foreground">{{ formatCostCompact(historyAvgCost) }}</p>
           </div>
           <div class="bg-secondary rounded-lg p-4">
-            <p class="text-xs text-muted-foreground mb-1">最高月成本</p>
+            <p class="text-xs text-muted-foreground mb-1">最高月費用</p>
             <p class="text-xl font-bold text-foreground">{{ formatCost(historyMaxCost) }}</p>
           </div>
           <div class="bg-secondary rounded-lg p-4">
-            <p class="text-xs text-muted-foreground mb-1">最低月成本</p>
+            <p class="text-xs text-muted-foreground mb-1">最低月費用</p>
             <p class="text-xl font-bold text-foreground">{{ formatCost(historyMinCost) }}</p>
           </div>
           <div class="bg-secondary rounded-lg p-4">
@@ -268,9 +268,9 @@
         </div>
       </div>
 
-      <!-- Model Cost Analysis -->
+      <!-- Model Fee Analysis -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
-        <h2 class="text-lg font-semibold text-foreground mb-6">模型成本佔比</h2>
+        <h2 class="text-lg font-semibold text-foreground mb-6">模型費用佔比</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <!-- Chart.js Doughnut -->
           <div class="flex items-center justify-center">
@@ -283,7 +283,7 @@
               />
               <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div class="text-center">
-                  <p class="text-xs text-muted-foreground">總成本</p>
+                  <p class="text-xs text-muted-foreground">總費用</p>
                   <p class="text-sm font-bold text-foreground">{{ formatCostCompact(companyCost) }}</p>
                 </div>
               </div>
@@ -314,9 +314,9 @@
         </div>
       </div>
 
-      <!-- Department Cost Comparison -->
+      <!-- Department Fee Comparison -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
-        <h2 class="text-lg font-semibold text-foreground mb-6">部門成本對比</h2>
+        <h2 class="text-lg font-semibold text-foreground mb-6">部門費用對比</h2>
         <div class="space-y-4">
           <div v-for="dept in deptCostRanking" :key="dept.id">
             <div class="flex justify-between text-sm mb-1">
@@ -355,7 +355,7 @@
         <div class="space-y-4">
           <!-- Company budget -->
           <div>
-            <label class="block text-sm font-medium text-foreground mb-2">公司整體月預算 (USD)</label>
+            <label class="block text-sm font-medium text-foreground mb-2">公司整體月預算（台幣）</label>
             <input
               v-model.number="editCompanyBudget"
               type="number"
@@ -367,7 +367,7 @@
 
           <!-- Department budgets -->
           <div>
-            <p class="text-sm font-medium text-foreground mb-3">各部門月預算 (USD)</p>
+            <p class="text-sm font-medium text-foreground mb-3">各部門月預算（台幣）</p>
             <div class="space-y-3">
               <div v-for="dept in departments" :key="dept.id" class="flex items-center gap-3">
                 <label class="text-sm text-foreground w-32 flex-shrink-0">{{ dept.name }}</label>
@@ -585,7 +585,7 @@ function formatUsageRate(rate: number): string {
   return Number.isFinite(rate) ? `${(rate * 100).toFixed(1)}%` : '∞%'
 }
 
-// Cost trend - now uses filtered records and respects date/model filters
+// Fee trend - now uses filtered records and respects date/model filters
 const last30DaysTrend = computed(() => {
   const days: Array<{ date: string; cost: number }> = []
   const startDate = new Date(dateRange.value.startDate)
@@ -629,7 +629,7 @@ const historyAvgRate = computed(() => {
   return h.reduce((s, m) => s + (m.cost / m.budget) * 100, 0) / h.length
 })
 
-// ========== Chart.js: Cost Trend ==========
+// ========== Chart.js: Fee Trend ==========
 const trendChartKey = ref(0)
 const trendChartData = computed(() => {
   const data = last30DaysTrend.value
@@ -637,7 +637,7 @@ const trendChartData = computed(() => {
     labels: data.map((d) => d.date),
     datasets: [
       {
-        label: '日成本 (USD)',
+        label: '日費用（TWD）',
         data: data.map((d) => d.cost),
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         borderColor: 'rgba(59, 130, 246, 1)',
@@ -666,7 +666,7 @@ const trendChartOptions = computed(() => ({
       padding: 10,
       cornerRadius: 6,
       callbacks: {
-        label: (ctx: any) => `當日成本: US$${ctx.parsed.y.toFixed(2)}`,
+        label: (ctx: any) => `當日費用: ${formatCost(ctx.parsed.y)}`,
       },
     },
   },
@@ -681,7 +681,7 @@ const trendChartOptions = computed(() => ({
       ticks: {
         font: { size: 11 },
         color: textColor.value,
-        callback: (value: any) => `US$${Number(value).toFixed(2)}`,
+        callback: (value: any) => formatCostCompact(Number(value)),
       },
     },
   },
@@ -695,7 +695,7 @@ const budgetChartData = computed(() => {
     labels: data.map((m) => m.month),
     datasets: [
       {
-        label: '實際成本',
+        label: '實際費用',
         data: data.map((m) => m.cost),
         backgroundColor: 'rgba(59, 130, 246, 0.7)',
         borderColor: 'rgba(59, 130, 246, 1)',
@@ -736,7 +736,7 @@ const budgetChartOptions = computed(() => ({
       callbacks: {
         label: (ctx: any) => {
           const label = ctx.dataset.label || ''
-          return `${label}: US$${ctx.parsed.y.toLocaleString()}`
+          return `${label}: ${formatCost(ctx.parsed.y)}`
         },
       },
     },
@@ -754,7 +754,7 @@ const budgetChartOptions = computed(() => ({
         color: textColor.value,
         callback: (value: any) => {
           const v = Number(value)
-          return v >= 1000 ? `US$${(v / 1000).toFixed(0)}K` : `US$${v}`
+          return formatCostCompact(v)
         },
       },
     },
@@ -827,7 +827,7 @@ const doughnutChartOptions = computed(() => ({
           const value = ctx.parsed
           const total = ctx.dataset.data.reduce((a: number, b: number) => a + b, 0)
           const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0'
-          return `${ctx.label}: US$${value.toFixed(2)} (${pct}%)`
+          return `${ctx.label}: ${formatCost(value)} (${pct}%)`
         },
       },
     },
@@ -872,7 +872,7 @@ function saveBudgetSettings() {
 // CSV export
 function exportCSV() {
   const csv = exportCostAnalysisToCSV(filteredRecords.value, departments.value, departmentStats.value)
-  downloadCSV(csv, `cost-analysis-${new Date().toISOString().split('T')[0]}.csv`)
+  downloadCSV(csv, `fee-analysis-${new Date().toISOString().split('T')[0]}.csv`)
 }
 
 function formatNumber(num: number): string {

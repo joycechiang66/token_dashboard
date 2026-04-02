@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
-const STORAGE_KEY = 'token-dashboard-budget'
+const STORAGE_KEY = 'token-dashboard-fee-budget-v2'
 
 interface StoredBudget {
   companyBudget: number
@@ -22,16 +22,16 @@ function saveToStorage(data: StoredBudget) {
   } catch { /* ignore */ }
 }
 
-const defaultCompanyBudget = 10000
+const defaultCompanyBudget = 65000
 const defaultDepartmentBudgets: Record<string, number> = {
-  'dept-1': 2000,
-  'dept-2': 3000,
-  'dept-3': 1500,
-  'dept-4': 1500,
-  'dept-5': 1000,
-  'dept-6': 1200,
-  'dept-7': 2500,
-  'dept-8': 2500,
+  'dept-1': 9000,
+  'dept-2': 12000,
+  'dept-3': 7500,
+  'dept-4': 6500,
+  'dept-5': 4500,
+  'dept-6': 5000,
+  'dept-7': 11000,
+  'dept-8': 9500,
 }
 
 export const useBudgetStore = defineStore('budget', () => {
@@ -41,18 +41,18 @@ export const useBudgetStore = defineStore('budget', () => {
   const departmentBudgets = ref<Record<string, number>>(stored?.departmentBudgets ?? { ...defaultDepartmentBudgets })
 
   const budgetHistory = ref<Array<{ month: string; cost: number; budget: number }>>([
-    { month: '2025-11', cost: 8500, budget: 10000 },
-    { month: '2025-12', cost: 9200, budget: 10000 },
-    { month: '2026-01', cost: 7800, budget: 10000 },
-    { month: '2026-02', cost: 8900, budget: 10000 },
-    { month: '2026-03', cost: 9100, budget: 10000 },
-    { month: '2026-04', cost: 8600, budget: 10000 },
-    { month: '2026-05', cost: 9400, budget: 10000 },
-    { month: '2026-06', cost: 8200, budget: 10000 },
-    { month: '2026-07', cost: 9800, budget: 10000 },
-    { month: '2026-08', cost: 8700, budget: 10000 },
-    { month: '2026-09', cost: 9300, budget: 10000 },
-    { month: '2026-10', cost: 8400, budget: 10000 },
+    { month: '2025-11', cost: 52000, budget: 65000 },
+    { month: '2025-12', cost: 56800, budget: 65000 },
+    { month: '2026-01', cost: 48900, budget: 65000 },
+    { month: '2026-02', cost: 61500, budget: 65000 },
+    { month: '2026-03', cost: 59800, budget: 65000 },
+    { month: '2026-04', cost: 54200, budget: 65000 },
+    { month: '2026-05', cost: 62600, budget: 65000 },
+    { month: '2026-06', cost: 57100, budget: 65000 },
+    { month: '2026-07', cost: 68900, budget: 65000 },
+    { month: '2026-08', cost: 60400, budget: 65000 },
+    { month: '2026-09', cost: 65200, budget: 65000 },
+    { month: '2026-10', cost: 58200, budget: 65000 },
   ])
 
   // 監聽變化自動存入 localStorage

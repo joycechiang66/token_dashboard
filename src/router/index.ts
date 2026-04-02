@@ -26,10 +26,14 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/cost-analysis',
-    name: 'CostAnalysis',
+    path: '/fee-analysis',
+    name: 'FeeAnalysis',
     component: CostAnalysis,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/cost-analysis',
+    redirect: '/fee-analysis'
   },
   {
     path: '/:pathMatch(.*)*',
