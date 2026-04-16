@@ -1,120 +1,121 @@
-# Token Dashboard (AI Token 使用監控面板)
+# Token Dashboard
 
-這是一個專為企業或團隊設計的 **AI Token 使用量監控與成本分析儀表板**。透過直觀的數據視覺化，協助管理者追蹤各部門、專案及員工的 Token 消耗、成本效益與使用趨勢，進而優化 AI 資源的分配與預算管理。
+這是一個專為企業內部 AI 使用管理設計的 **Token 使用監控面板**。目前產品主軸聚焦在首頁總覽與部門明細，協助管理者追蹤各部門與員工的 Token 使用量、部門分布與預算使用風險。
 
-## 🚀 專案特點
+## 專案現況
 
-*   **全方位數據監控**：即時查看總 Token 使用量、成本預估及模型分佈。
-*   **智慧預算警示系統**：
-    *   **全域監控**：自動偵測公司整體與各部門的預算使用率。
-    *   **即時提醒**：當預算使用超過 80% (警告) 或 100% (超支) 時，於首頁與成本分析頁面顯示醒目提示。
-*   **多維度分析**：
-    *   **部門視角**：比較各部門 (如雲端服務部、系統業務部、專案部等) 的消耗與效率。
-    *   **員工視角**：深入了解每位成員的使用習慣與效率排名。
-    *   **模型視角**：分析不同 AI 模型 (如 GPT-4, Claude, Gemini 等) 的使用佔比與成本效益。
-    *   **時間視角**：支援自訂日期範圍篩選 (最近 7/14/30 天)。
-*   **互動式圖表**：整合 Chart.js 提供清晰的趨勢圖與分佈圖。
-*   **詳細報表匯出**：支援將數據匯出為 CSV 格式，方便報表製作。
-*   **響應式設計 (RWD)**：完美支援 Desktop、Tablet 與 Mobile 裝置瀏覽。
-*   **現代化 UI/UX**：包含深色模式 (Dark Mode) 切換與流暢的動畫效果。
-*   **角色權限管理 (RBAC)**：
-    *   **管理員 (Admin)**：擁有完整權限，包含預算設定與數據分析。
-    *   **一般用戶 (User)**：僅供查看統計數據，無法修改設定。
+- 首頁提供公司整體 Token 使用概況、部門 Token 排名、部門卡片總覽與預算警示。
+- 部門頁提供部門層級統計、模型費用分佈、員工效率排名與員工明細匯出。
+- 系統已移除獨立的「費用分析」頁面與「預算設定」介面。
+- 舊路由 `/cost-analysis` 與 `/fee-analysis` 會自動導回首頁。
 
-## 🔐 測試帳號
+## 主要功能
 
-為方便測試功能，系統預設提供兩組帳號：
+- **Token 使用總覽**：查看總 Token、輸入 Token、輸出 Token、部門數量與員工總數。
+- **預算風險提示**：當公司或部門預算使用率超過 80% 時，首頁顯示警示；超過 100% 時顯示超支提醒。
+- **部門 Token 排名**：依總 Token 使用量檢視各部門的活躍度排序。
+- **部門明細檢視**：可深入查看單一部門的 Token 使用、模型費用與員工效率。
+- **條件篩選**：支援最近 7 / 14 / 30 天與模型條件篩選。
+- **CSV 匯出**：支援公司摘要、部門摘要與員工詳細紀錄匯出。
+- **響應式介面**：支援桌機、平板與手機使用。
+- **深色模式**：提供淺色 / 深色主題切換。
+
+## 測試帳號
+
+系統預設提供以下帳號：
 
 | 角色 | 帳號 | 密碼 | 權限說明 |
 | :--- | :--- | :--- | :--- |
-| **管理員** | `admin` | `admin123` | 可查看所有數據，**可設定預算**。 |
-| **一般用戶** | `user` | `user123` | 僅可查看數據，**無法設定預算**。 |
+| 管理員 | `admin` | `admin123` | 可查看所有儀表板與部門明細。 |
+| 一般用戶 | `user` | `user123` | 可查看統計資料。 |
 
-## 💰 Token 計費標準
+## 企業費用模型
 
-本專案使用以下費率計算成本（單位：每 Token 美金價格 US$）：
+本專案目前採用 **企業內部台幣費率模型**，依各模型的每 1000 Token 內部費率計算預估費用。
 
-| 模型 (Model) | Input 費率 | Output 費率 |
+| 模型 | 輸入費率（每 1000 Token / NT$） | 輸出費率（每 1000 Token / NT$） |
 | :--- | :--- | :--- |
-| **GPT-4** | 0.00003 | 0.00006 |
-| **GPT-3.5** | 0.0000005 | 0.0000015 |
-| **Claude** | 0.000008 | 0.000024 |
-| **Gemini** | 0.00001 | 0.00002 |
-| **Llama-2** | 0.0000005 | 0.0000015 |
-| **Mistral** | 0.00001 | 0.00003 |
-| **Qwen** | 0.000005 | 0.000015 |
-| **Yi** | 0.000003 | 0.000009 |
+| GPT-4 | 28 | 56 |
+| GPT-3.5 | 4 | 8 |
+| Claude | 18 | 36 |
+| Gemini | 14 | 28 |
+| Llama-2 | 3 | 6 |
+| Mistral | 10 | 20 |
+| Qwen | 8 | 16 |
+| Yi | 6 | 12 |
 
-> 註：未列出之模型將採用預設費率 (Input: 0.00001 / Output: 0.00003)。
+> 註：未列出的模型會使用預設費率，輸入 `NT$12 / 1000 Token`、輸出 `NT$24 / 1000 Token`。
 
-## 🛠️ 技術棧
+## 預算與警示
 
-本專案採用現代化的前端技術構建：
+- 系統內建公司與部門月預算資料，供首頁預算警示與部門卡片使用率顯示使用。
+- 預算資料儲存在瀏覽器 `localStorage`，key 為 `token-dashboard-fee-budget-v2`。
+- 目前沒有前台預算編輯介面，如需調整可修改 `src/stores/budgetStore.ts` 內的預設值，或清除瀏覽器本地儲存後重新載入。
 
-*   **核心框架**: [Vue 3](https://vuejs.org/) (Composition API + `<script setup>`)
-*   **語言**: [TypeScript](https://www.typescriptlang.org/)
-*   **建置工具**: [Vite](https://vitejs.dev/)
-*   **樣式與 UI**: [Tailwind CSS 4](https://tailwindcss.com/)
-*   **狀態管理**: [Pinia](https://pinia.vuejs.org/) (Auth, Budget Store)
-*   **路由**: [Vue Router 4](https://router.vuejs.org/) (含路由守衛)
-*   **圖表**: [Chart.js](https://www.chartjs.org/) + [vue-chartjs](https://vue-chartjs.org/)
-*   **工具庫**: 
-    *   `date-fns` (日期處理)
+## 技術棧
 
-## 📂 專案結構
+- **核心框架**：[Vue 3](https://vuejs.org/)（Composition API + `<script setup>`）
+- **語言**：[TypeScript](https://www.typescriptlang.org/)
+- **建置工具**：[Vite](https://vitejs.dev/)
+- **樣式系統**：[Tailwind CSS 4](https://tailwindcss.com/)
+- **狀態管理**：[Pinia](https://pinia.vuejs.org/)
+- **路由**：[Vue Router 4](https://router.vuejs.org/)
+- **後端服務**：[Express](https://expressjs.com/)
 
-```
+## 專案結構
+
+```text
 token_dashboard/
 ├── src/
-│   ├── components/      # 共用元件 (TopBudgetAlert, ThemeToggle, MultiSelectDropdown)
-│   ├── composables/     # 組合式函數 (useBudgetAlerts, useChartTheme, useTheme)
-│   ├── pages/           # 頁面組件 (Home, DepartmentDetail, CostAnalysis, Login)
-│   ├── router/          # 路由配置 (含權限驗證)
-│   ├── stores/          # Pinia 狀態管理 (auth, budgetStore)
-│   ├── types/           # TypeScript 型別定義
-│   ├── utils/           # 工具函數 (Mock數據, 計算邏輯, 匯出功能, 效率計算)
-│   ├── App.vue          # 根組件
-│   ├── main.ts          # 入口文件
-│   └── style.css        # 全局樣式 (Tailwind CSS)
-├── server/              # 後端 API (Express, Optional - 用於構建與預覽)
+│   ├── components/      # 共用元件（警示、日期、下拉選單、分頁、主題切換）
+│   ├── composables/     # 組合式函數（預算警示等）
+│   ├── pages/           # 頁面組件（Home、DepartmentDetail、Login、NotFound）
+│   ├── router/          # 路由配置與權限驗證
+│   ├── stores/          # Pinia 狀態（auth、budgetStore）
+│   ├── types/           # TypeScript 型別
+│   ├── utils/           # 計算、模擬資料、CSV 匯出等工具
+│   ├── App.vue
+│   ├── main.ts
+│   └── style.css
+├── server/
 └── index.html
 ```
 
-## 📦 安裝與執行
+## 安裝與執行
 
-確保您的環境已安裝 [Node.js](https://nodejs.org/) (建議 v18+) 與 [pnpm](https://pnpm.io/)。
+請先安裝 [Node.js](https://nodejs.org/)（建議 v18 以上）與 [pnpm](https://pnpm.io/)。
 
-1.  **複製專案**
-    ```bash
-    git clone https://github.com/joycechiang66/token_dashboard.git
-    cd token_dashboard
-    ```
-
-2.  **安裝依賴**
-    ```bash
-    pnpm install
-    ```
-
-3.  **啟動開發伺服器**
-    ```bash
-    pnpm dev
-    ```
-    啟動後，請查看終端機顯示的網址（通常為 `http://localhost:5173` 或 `http://localhost:3000`）。
-
-4.  **建置生產版本**
-    ```bash
-    npm run build
-    ```
-    建置後的檔案將位於 `dist/` 目錄。
-
-## 🧪 程式碼檢查
-
-本專案配置了 TypeScript 類型檢查：
+1. 複製專案
 
 ```bash
-npm run check
+git clone https://github.com/joycechiang66/token_dashboard.git
+cd token_dashboard
 ```
 
-## 📝 License
+2. 安裝依賴
 
-MIT License
+```bash
+pnpm install
+```
+
+3. 啟動開發環境
+
+```bash
+pnpm dev
+```
+
+4. 建置正式版本
+
+```bash
+pnpm run build
+```
+
+## 程式碼檢查
+
+```bash
+pnpm run check
+```
+
+## License
+
+MIT

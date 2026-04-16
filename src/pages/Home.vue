@@ -141,15 +141,15 @@
         </div>
       </div>
 
-      <!-- Efficiency Ranking -->
+      <!-- Department Token Ranking -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-semibold text-foreground">部門效率排名</h2>
-          <span class="text-xs text-muted-foreground">Token / NT$</span>
+          <h2 class="text-xl font-semibold text-foreground">部門 Token 排名</h2>
+          <span class="text-xs text-muted-foreground">依總 Token 使用量排序</span>
         </div>
         <div class="space-y-3">
           <div
-            v-for="(dept, index) in departmentEfficiencyRanking"
+            v-for="(dept, index) in departmentTokenRanking"
             :key="dept.id"
             class="flex items-center gap-4 p-4 bg-secondary rounded-lg"
           >
@@ -169,26 +169,13 @@
                 <span class="font-medium text-foreground">{{ dept.name }}</span>
                 <div class="flex items-center gap-3">
                   <span class="text-sm text-muted-foreground">{{ formatNumber(dept.totalTokens) }} tokens</span>
-                  <span class="text-sm text-muted-foreground">{{ formatCostCompact(dept.cost) }}</span>
-                  <span class="text-sm font-medium text-foreground">{{ dept.efficiency.toFixed(0) }} T/NT$</span>
-                  <span
-                    :class="[
-                      'px-2 py-0.5 rounded text-xs font-medium',
-                      dept.rating === '高效'
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                        : dept.rating === '低效'
-                          ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                    ]"
-                  >
-                    {{ dept.rating }}
-                  </span>
+                  <span class="text-sm text-muted-foreground">{{ dept.recordCount }} 筆</span>
                 </div>
               </div>
               <div class="w-full bg-muted rounded-full h-1.5">
                 <div
                   class="bg-primary h-1.5 rounded-full transition-all"
-                  :style="{ width: Math.min((dept.efficiency / maxEfficiency) * 100, 100) + '%' }"
+                  :style="{ width: Math.min((dept.totalTokens / maxTokens) * 100, 100) + '%' }"
                 />
               </div>
             </div>
@@ -205,20 +192,8 @@
           :to="`/department/${dept.id}`"
           class="bg-card border border-border rounded-lg p-6 hover:shadow-lg hover:border-primary transition cursor-pointer block"
         >
-          <div class="flex items-start justify-between mb-4">
+          <div class="mb-4">
             <h3 class="text-lg font-semibold text-foreground">{{ dept.name }}</h3>
-            <span
-              :class="[
-                'px-2 py-0.5 rounded text-xs font-medium',
-                getBudgetStatus(dept.id) === 'critical'
-                  ? 'bg-red-100 text-red-800'
-                  : getBudgetStatus(dept.id) === 'warning'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-green-100 text-green-800',
-              ]"
-            >
-              {{ getBudgetStatusLabel(dept.id) }}
-            </span>
           </div>
           <p class="text-xs text-muted-foreground mb-4">{{ dept.description }}</p>
           <div class="space-y-2">
@@ -233,29 +208,8 @@
               </span>
             </div>
             <div class="flex justify-between text-sm">
-              <span class="text-muted-foreground">預估費用</span>
-              <span class="font-medium text-foreground">{{ formatCostCompact(departmentStats[dept.id]?.cost || 0) }}</span>
-            </div>
-            <div class="flex justify-between text-sm">
               <span class="text-muted-foreground">使用記錄</span>
               <span class="font-medium text-foreground">{{ departmentStats[dept.id]?.recordCount || 0 }} 筆</span>
-            </div>
-          </div>
-          <!-- Budget bar -->
-          <div class="mt-4">
-            <div class="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>預算使用率</span>
-              <span>{{ getBudgetUsageRate(dept.id) }}%</span>
-            </div>
-            <div class="w-full bg-muted rounded-full h-1.5">
-              <div
-                :class="[
-                  'h-1.5 rounded-full transition-all',
-                  getBudgetStatus(dept.id) === 'critical' ? 'bg-red-500' :
-                  getBudgetStatus(dept.id) === 'warning' ? 'bg-yellow-500' : 'bg-green-500',
-                ]"
-                :style="{ width: getBudgetUsageWidth(dept.id) + '%' }"
-              />
             </div>
           </div>
         </router-link>
@@ -268,8 +222,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { getMockData, filterRecordsByDateRange, filterRecordsByModels, getAvailableModels } from '../utils/mockData'
-import { calculateTotalCost, formatCostCompact } from '../utils/costCalculator'
-import { calculateDepartmentEfficiencies, getEfficiencyRating } from '../utils/efficiencyCalculator'
+import { calculateTotalCost } from '../utils/costCalculator'
 import { useBudgetStore } from '../stores/budgetStore'
 import { useAuthStore } from '../stores/auth'
 import { exportCompanySummaryToCSV, downloadCSV } from '../utils/csvExport'
@@ -410,63 +363,21 @@ const departmentStats = computed(() => {
   return stats
 })
 
-const departmentEfficiencies = computed(() =>
-  calculateDepartmentEfficiencies(filteredRecords.value, departments.value.map((d) => d.id))
-)
-
-const departmentEfficiencyRanking = computed(() => {
-  const allEfficiencies = Object.values(departmentEfficiencies.value)
+const departmentTokenRanking = computed(() => {
   return departments.value
     .map((dept) => ({
       id: dept.id,
       name: dept.name,
-      efficiency: departmentEfficiencies.value[dept.id] || 0,
+      recordCount: departmentStats.value[dept.id]?.recordCount || 0,
       totalTokens: departmentStats.value[dept.id]?.totalTokens || 0,
-      cost: departmentStats.value[dept.id]?.cost || 0,
-      rating: getEfficiencyRating(departmentEfficiencies.value[dept.id] || 0, allEfficiencies),
     }))
-    .sort((a, b) => b.efficiency - a.efficiency)
+    .sort((a, b) => b.totalTokens - a.totalTokens)
 })
 
-const maxEfficiency = computed(() => {
-  const efficiencies = departmentEfficiencyRanking.value.map((d) => d.efficiency)
-  return efficiencies.length > 0 ? Math.max(...efficiencies) : 1
+const maxTokens = computed(() => {
+  const totals = departmentTokenRanking.value.map((d) => d.totalTokens)
+  return totals.length > 0 ? Math.max(...totals) : 1
 })
-
-// Budget helpers
-function getBudgetUsageRate(deptId: string): string {
-  const cost = departmentStats.value[deptId]?.cost || 0
-  const budget = budgetStore.getDepartmentBudget(deptId)
-  const rate = getUsageRate(cost, budget)
-  return Number.isFinite(rate) ? (rate * 100).toFixed(1) : '∞'
-}
-function getBudgetStatus(deptId: string): 'ok' | 'warning' | 'critical' {
-  const cost = departmentStats.value[deptId]?.cost || 0
-  const budget = budgetStore.getDepartmentBudget(deptId)
-  const rate = getUsageRate(cost, budget) * 100
-  if (rate > 100) return 'critical'
-  if (rate > 80) return 'warning'
-  return 'ok'
-}
-function getBudgetStatusLabel(deptId: string): string {
-  const status = getBudgetStatus(deptId)
-  if (status === 'critical') return '超支'
-  if (status === 'warning') return '警告'
-  return '正常'
-}
-function getBudgetUsageWidth(deptId: string): number {
-  const cost = departmentStats.value[deptId]?.cost || 0
-  const budget = budgetStore.getDepartmentBudget(deptId)
-  const rate = getUsageRate(cost, budget)
-  return Number.isFinite(rate) ? Math.min(rate * 100, 100) : 100
-}
-
-function getUsageRate(cost: number, budget: number): number {
-  if (budget <= 0) {
-    return cost > 0 ? Number.POSITIVE_INFINITY : 0
-  }
-  return cost / budget
-}
 
 // Alerts
 const { alerts: topAlerts } = useBudgetAlerts(budgetStore, companyCost, departmentStats, departments)
