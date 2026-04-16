@@ -111,7 +111,7 @@
       </template>
       <template v-else>
         <!-- Department Stats -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div class="bg-card border border-border rounded-lg p-5">
           <p class="text-xs text-muted-foreground mb-1">總 Token</p>
           <p class="text-2xl font-bold text-foreground">{{ formatNumber(departmentTotalTokens) }}</p>
@@ -124,15 +124,11 @@
           <p class="text-xs text-muted-foreground mb-1">輸出 Token</p>
           <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ formatNumber(departmentOutputTokens) }}</p>
         </div>
-        <div class="bg-card border border-border rounded-lg p-5">
-          <p class="text-xs text-muted-foreground mb-1">預估費用</p>
-          <p class="text-2xl font-bold text-foreground">{{ formatCostCompact(departmentCost) }}</p>
-        </div>
       </div>
 
       <!-- Model Usage Breakdown -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
-        <h2 class="text-xl font-semibold text-foreground mb-4">模型費用分佈</h2>
+        <h2 class="text-xl font-semibold text-foreground mb-4">模型 Token 分佈</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div
             v-for="model in modelBreakdown"
@@ -142,20 +138,19 @@
             <p class="text-sm font-medium text-foreground mb-1">{{ model.name }}</p>
             <p class="text-lg font-bold text-foreground">{{ model.count }} 次</p>
             <p class="text-xs text-muted-foreground">{{ formatNumber(model.tokens) }} tokens</p>
-            <p class="text-xs text-primary">{{ formatCost(model.cost) }}</p>
           </div>
         </div>
       </div>
 
-      <!-- Employee Efficiency Ranking -->
+      <!-- Employee Token Ranking -->
       <div class="bg-card border border-border rounded-lg p-6 mb-8">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-semibold text-foreground">員工效率排名</h2>
-          <span class="text-xs text-muted-foreground">點擊查看詳細記錄</span>
+          <h2 class="text-xl font-semibold text-foreground">員工 Token 排名</h2>
+          <span class="text-xs text-muted-foreground">依總 Token 使用量排序，點擊查看詳細記錄</span>
         </div>
         <div class="space-y-3">
           <div
-            v-for="(emp, index) in employeeEfficiencyRanking"
+            v-for="(emp, index) in employeeTokenRanking"
             :key="emp.id"
             class="bg-secondary rounded-lg overflow-hidden"
           >
@@ -180,27 +175,14 @@
                   <span class="font-medium text-foreground">{{ emp.name }}</span>
                   <div class="flex items-center gap-3">
                     <span class="text-sm text-muted-foreground">{{ formatNumber(emp.totalTokens) }} tokens</span>
-                    <span class="text-sm text-muted-foreground">{{ formatCostCompact(emp.cost) }}</span>
-                    <span class="text-sm font-medium text-foreground">{{ emp.efficiency.toFixed(0) }} T/NT$</span>
-                    <span
-                      :class="[
-                        'px-2 py-0.5 rounded text-xs font-medium',
-                        emp.rating === '高效'
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : emp.rating === '低效'
-                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                      ]"
-                    >
-                      {{ emp.rating }}
-                    </span>
+                    <span class="text-sm text-muted-foreground">{{ emp.recordCount }} 筆</span>
                     <span class="text-muted-foreground text-sm transition-transform duration-200" :class="{ 'rotate-180': expandedEmployees.has(emp.id) }">▼</span>
                   </div>
                 </div>
                 <div class="w-full bg-muted rounded-full h-1.5">
                   <div
                     class="bg-primary h-1.5 rounded-full transition-all"
-                    :style="{ width: Math.min((emp.efficiency / maxEmployeeEfficiency) * 100, 100) + '%' }"
+                    :style="{ width: Math.min((emp.totalTokens / maxEmployeeTokens) * 100, 100) + '%' }"
                   />
                 </div>
               </div>
@@ -226,7 +208,7 @@
                       <th class="text-left py-2 px-3 text-xs font-medium text-muted-foreground">模型</th>
                       <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">輸入 Token</th>
                       <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">輸出 Token</th>
-                      <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">費用</th>
+                      <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">總 Token</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -239,7 +221,7 @@
                       <td class="py-2 px-3 text-foreground">{{ record.model }}</td>
                       <td class="text-right py-2 px-3 text-foreground">{{ formatNumber(record.inputTokens) }}</td>
                       <td class="text-right py-2 px-3 text-foreground">{{ formatNumber(record.outputTokens) }}</td>
-                      <td class="text-right py-2 px-3 text-foreground">{{ formatCost(calculateRecordCost(record)) }}</td>
+                      <td class="text-right py-2 px-3 text-foreground">{{ formatNumber(record.inputTokens + record.outputTokens) }}</td>
                     </tr>
                     <tr v-if="(employeeRecords.get(emp.id) || []).length === 0">
                       <td colspan="5" class="py-4 text-center text-muted-foreground text-xs">此篩選條件下無記錄</td>
@@ -268,8 +250,6 @@
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { getMockData, filterRecordsByDateRange, filterRecordsByModels, getDepartmentById, getAvailableModels } from '../utils/mockData'
-import { calculateTotalCost, formatCostCompact, formatCost, calculateRecordCost } from '../utils/costCalculator'
-import { calculateEmployeeEfficiencies, getEfficiencyRating } from '../utils/efficiencyCalculator'
 import { exportDepartmentSummaryToCSV, exportEmployeeDetailsToCSV, downloadCSV } from '../utils/csvExport'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import MultiSelectDropdown from '../components/MultiSelectDropdown.vue'
@@ -386,29 +366,23 @@ const filteredDeptRecords = computed(() => {
 const departmentTotalTokens = computed(() => filteredDeptRecords.value.reduce((sum, r) => sum + r.inputTokens + r.outputTokens, 0))
 const departmentInputTokens = computed(() => filteredDeptRecords.value.reduce((sum, r) => sum + r.inputTokens, 0))
 const departmentOutputTokens = computed(() => filteredDeptRecords.value.reduce((sum, r) => sum + r.outputTokens, 0))
-const departmentCost = computed(() => calculateTotalCost(filteredDeptRecords.value))
 
 // Model breakdown
 const modelBreakdown = computed(() => {
-  const map = new Map<string, { count: number; tokens: number; cost: number }>()
+  const map = new Map<string, { count: number; tokens: number }>()
   filteredDeptRecords.value.forEach((r) => {
-    const existing = map.get(r.model) || { count: 0, tokens: 0, cost: 0 }
+    const existing = map.get(r.model) || { count: 0, tokens: 0 }
     existing.count++
     existing.tokens += r.inputTokens + r.outputTokens
-    existing.cost += calculateRecordCost(r)
     map.set(r.model, existing)
   })
   return Array.from(map.entries())
     .map(([name, data]) => ({ name, ...data }))
-    .sort((a, b) => b.count - a.count)
+    .sort((a, b) => b.tokens - a.tokens)
 })
 
 // Employees
 const departmentEmployees = computed(() => data.value.employees.filter((e) => e.departmentId === departmentId))
-
-const employeeEfficiencies = computed(() =>
-  calculateEmployeeEfficiencies(filteredDeptRecords.value, departmentEmployees.value.map((e) => e.id))
-)
 
 const employeeRecords = computed(() => {
   const map = new Map<string, TokenRecord[]>()
@@ -421,26 +395,23 @@ const employeeRecords = computed(() => {
   return map
 })
 
-const employeeEfficiencyRanking = computed(() => {
-  const allEfficiencies = Object.values(employeeEfficiencies.value)
+const employeeTokenRanking = computed(() => {
   return departmentEmployees.value
     .map((emp) => {
       const empRecords = employeeRecords.value.get(emp.id) || []
       return {
         id: emp.id,
         name: emp.name,
-        efficiency: employeeEfficiencies.value[emp.id] || 0,
+        recordCount: empRecords.length,
         totalTokens: empRecords.reduce((sum, r) => sum + r.inputTokens + r.outputTokens, 0),
-        cost: calculateTotalCost(empRecords),
-        rating: getEfficiencyRating(employeeEfficiencies.value[emp.id] || 0, allEfficiencies),
       }
     })
-    .sort((a, b) => b.efficiency - a.efficiency)
+    .sort((a, b) => b.totalTokens - a.totalTokens)
 })
 
-const maxEmployeeEfficiency = computed(() => {
-  const effs = employeeEfficiencyRanking.value.map((e) => e.efficiency)
-  return effs.length > 0 ? Math.max(...effs) : 1
+const maxEmployeeTokens = computed(() => {
+  const totals = employeeTokenRanking.value.map((e) => e.totalTokens)
+  return totals.length > 0 ? Math.max(...totals) : 1
 })
 
 // Expand/collapse
@@ -484,7 +455,7 @@ function exportDeptCSV() {
     totalTokens: departmentTotalTokens.value,
     inputTokens: departmentInputTokens.value,
     outputTokens: departmentOutputTokens.value,
-    cost: departmentCost.value,
+    cost: 0,
     recordCount: filteredDeptRecords.value.length,
   }
   const csv = exportDepartmentSummaryToCSV(department.value?.name || '', deptStats, filteredDeptRecords.value)

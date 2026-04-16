@@ -36,7 +36,7 @@ export function exportDepartmentSummaryToCSV(
 ): string {
   const lines: string[] = []
 
-  lines.push(`部門費用分析報告 - ${departmentName}`)
+  lines.push(`部門 Token 使用報告 - ${departmentName}`)
   lines.push(`生成時間: ${new Date().toLocaleString('zh-TW')}`)
   lines.push('')
 
@@ -45,25 +45,23 @@ export function exportDepartmentSummaryToCSV(
   lines.push(`總 Token 數,${stats.totalTokens}`)
   lines.push(`輸入 Token,${stats.inputTokens}`)
   lines.push(`輸出 Token,${stats.outputTokens}`)
-  lines.push(`預估費用,${formatCost(stats.cost)}`)
   lines.push(`使用記錄數,${stats.recordCount}`)
   lines.push('')
 
-  lines.push('模型費用統計')
-  lines.push('模型,使用次數,總 Token 數,預估費用')
+  lines.push('模型 Token 統計')
+  lines.push('模型,使用次數,總 Token 數')
 
-  const modelStats = new Map<string, { count: number; tokens: number; cost: number }>()
+  const modelStats = new Map<string, { count: number; tokens: number }>()
   records.forEach((record) => {
     const key = record.model
-    const existing = modelStats.get(key) || { count: 0, tokens: 0, cost: 0 }
+    const existing = modelStats.get(key) || { count: 0, tokens: 0 }
     existing.count++
     existing.tokens += record.inputTokens + record.outputTokens
-    existing.cost += calculateRecordCost(record)
     modelStats.set(key, existing)
   })
 
   modelStats.forEach((stats, model) => {
-    lines.push(`${model},${stats.count},${stats.tokens},${formatCost(stats.cost)}`)
+    lines.push(`${model},${stats.count},${stats.tokens}`)
   })
 
   return lines.join('\n')
@@ -80,13 +78,12 @@ export function exportEmployeeDetailsToCSV(
   lines.push('')
 
   lines.push('使用記錄詳情')
-  lines.push('日期,模型,輸入 Token,輸出 Token,總 Token 數,預估費用')
+  lines.push('日期,模型,輸入 Token,輸出 Token,總 Token 數')
 
   records.forEach((record) => {
     const totalTokens = record.inputTokens + record.outputTokens
-    const cost = calculateRecordCost(record)
     lines.push(
-      `${record.date},${record.model},${record.inputTokens},${record.outputTokens},${totalTokens},${formatCost(cost)}`
+      `${record.date},${record.model},${record.inputTokens},${record.outputTokens},${totalTokens}`
     )
   })
 
