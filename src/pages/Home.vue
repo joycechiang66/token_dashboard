@@ -212,6 +212,25 @@
               <span class="font-medium text-foreground">{{ departmentStats[dept.id]?.recordCount || 0 }} 筆</span>
             </div>
           </div>
+          <div class="mt-4">
+            <div class="flex justify-between text-xs text-muted-foreground mb-1">
+              <span>Token 使用率</span>
+              <span>{{ getDepartmentTokenUsageDisplay(dept.id) }}</span>
+            </div>
+            <div class="w-full bg-muted rounded-full h-1.5">
+              <div
+                :class="[
+                  'h-1.5 rounded-full transition-all',
+                  getDepartmentTokenUsageStatus(dept.id) === 'critical' ? 'bg-red-500' :
+                  getDepartmentTokenUsageStatus(dept.id) === 'warning' ? 'bg-yellow-500' : 'bg-green-500',
+                ]"
+                :style="{ width: getDepartmentTokenUsageWidth(dept.id) + '%' }"
+              />
+            </div>
+            <div class="flex justify-end text-[11px] text-muted-foreground mt-1">
+              <span>{{ formatNumber(departmentStats[dept.id]?.totalTokens || 0) }} / {{ formatNumber(getDepartmentTokenQuota(dept.id)) }} tokens</span>
+            </div>
+          </div>
         </router-link>
       </div>
       </template>
@@ -249,6 +268,18 @@ const departments = ref<Department[]>(data.value.departments)
 const employees = ref<Employee[]>(data.value.employees)
 const tokenRecords = ref<TokenRecord[]>(data.value.tokenRecords)
 const availableModels = ref<string[]>(getAvailableModels())
+
+// 雛型階段先以假資料模擬各部門可用 Token 額度，後續可改由後台設定帶入。
+const departmentTokenQuotaMap: Record<string, number> = {
+  'dept-1': 2400000,
+  'dept-2': 3200000,
+  'dept-3': 1800000,
+  'dept-4': 1600000,
+  'dept-5': 1200000,
+  'dept-6': 1400000,
+  'dept-7': 2800000,
+  'dept-8': 2600000,
+}
 
 // Filters
 const selectedModels = ref<string[]>([...availableModels.value])
@@ -378,6 +409,36 @@ const maxTokens = computed(() => {
   const totals = departmentTokenRanking.value.map((d) => d.totalTokens)
   return totals.length > 0 ? Math.max(...totals) : 1
 })
+
+function getDepartmentTokenQuota(deptId: string): number {
+  return departmentTokenQuotaMap[deptId] || 0
+}
+
+function getDepartmentTokenUsageDisplay(deptId: string): string {
+  const quota = getDepartmentTokenQuota(deptId)
+  const totalTokens = departmentStats.value[deptId]?.totalTokens || 0
+  if (quota <= 0) return totalTokens > 0 ? '∞%' : '0.0%'
+  return `${((totalTokens / quota) * 100).toFixed(1)}%`
+}
+
+function getDepartmentTokenUsageRate(deptId: string): number {
+  const quota = getDepartmentTokenQuota(deptId)
+  const totalTokens = departmentStats.value[deptId]?.totalTokens || 0
+  if (quota <= 0) return totalTokens > 0 ? Number.POSITIVE_INFINITY : 0
+  return totalTokens / quota
+}
+
+function getDepartmentTokenUsageStatus(deptId: string): 'ok' | 'warning' | 'critical' {
+  const usageRate = getDepartmentTokenUsageRate(deptId)
+  if (usageRate > 1) return 'critical'
+  if (usageRate > 0.8) return 'warning'
+  return 'ok'
+}
+
+function getDepartmentTokenUsageWidth(deptId: string): number {
+  const usageRate = getDepartmentTokenUsageRate(deptId)
+  return Number.isFinite(usageRate) ? Math.min(usageRate * 100, 100) : 100
+}
 
 // Alerts
 const { alerts: topAlerts } = useBudgetAlerts(budgetStore, companyCost, departmentStats, departments)
