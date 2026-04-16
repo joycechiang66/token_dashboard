@@ -16,12 +16,6 @@
             >
               匯出 CSV
             </button>
-            <router-link
-              to="/fee-analysis"
-              class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition text-sm"
-            >
-              費用分析
-            </router-link>
             <button
               @click="handleLogout"
               class="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md hover:opacity-90 transition text-sm"
@@ -124,7 +118,7 @@
       </template>
       <template v-else>
         <!-- Summary Stats -->
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         <div class="bg-card border border-border rounded-lg p-5">
           <p class="text-xs text-muted-foreground mb-1">總 Token</p>
           <p class="text-2xl font-bold text-foreground">{{ formatNumber(totalTokens) }}</p>
@@ -138,35 +132,12 @@
           <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ formatNumber(totalOutputTokens) }}</p>
         </div>
         <div class="bg-card border border-border rounded-lg p-5">
-          <p class="text-xs text-muted-foreground mb-1">預估費用</p>
-          <p class="text-2xl font-bold text-foreground">{{ formatCostCompact(companyCost) }}</p>
-        </div>
-        <div class="bg-card border border-border rounded-lg p-5">
           <p class="text-xs text-muted-foreground mb-1">部門數量</p>
           <p class="text-2xl font-bold text-foreground">{{ departments.length }}</p>
         </div>
         <div class="bg-card border border-border rounded-lg p-5">
           <p class="text-xs text-muted-foreground mb-1">員工總數</p>
           <p class="text-2xl font-bold text-foreground">{{ employees.length }}</p>
-        </div>
-      </div>
-
-      <!-- Token Usage Trend Mini Chart -->
-      <div class="bg-card border border-border rounded-lg p-6 mb-8">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-semibold text-foreground">篩選期間費用趨勢</h2>
-          <div class="flex gap-4 text-sm text-muted-foreground">
-            <span>總費用: <strong class="text-foreground">{{ formatCostCompact(companyCost) }}</strong></span>
-            <span>平均日費用: <strong class="text-foreground">{{ formatCost(trendAvgCost) }}</strong></span>
-          </div>
-        </div>
-        <div class="h-48">
-          <Line
-            v-if="trendChartData"
-            :data="trendChartData"
-            :options="trendChartOptions"
-            :key="trendChartKey"
-          />
         </div>
       </div>
 
@@ -295,21 +266,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { Line } from 'vue-chartjs'
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Filler,
-  Tooltip,
-} from 'chart.js'
-
-ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Filler, Tooltip)
+import { computed, ref } from 'vue'
 import { getMockData, filterRecordsByDateRange, filterRecordsByModels, getAvailableModels } from '../utils/mockData'
-import { calculateTotalCost, formatCost, formatCostCompact } from '../utils/costCalculator'
+import { calculateTotalCost, formatCostCompact } from '../utils/costCalculator'
 import { calculateDepartmentEfficiencies, getEfficiencyRating } from '../utils/efficiencyCalculator'
 import { useBudgetStore } from '../stores/budgetStore'
 import { useAuthStore } from '../stores/auth'
@@ -320,14 +279,12 @@ import ThemeToggle from '../components/ThemeToggle.vue'
 import MultiSelectDropdown from '../components/MultiSelectDropdown.vue'
 import DatePicker from '../components/DatePicker.vue'
 import EmptyState from '../components/EmptyState.vue'
-import { useChartTheme } from '../composables/useChartTheme'
 import type { TokenRecord, Department, Employee, DepartmentStats } from '../types'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const budgetStore = useBudgetStore()
 const authStore = useAuthStore()
-const { gridColor, textColor, tooltipBg } = useChartTheme()
 
 function handleLogout() {
   authStore.logout()
@@ -519,94 +476,6 @@ function exportCSV() {
   const csv = exportCompanySummaryToCSV(departments.value, departmentStats.value)
   downloadCSV(csv, `company-summary-${new Date().toISOString().split('T')[0]}.csv`)
 }
-
-// ========== Mini Trend Chart ==========
-const trendChartKey = ref(0)
-const dailyTrend = computed(() => {
-  const startDate = new Date(dateRange.value.startDate)
-  const endDate = new Date(dateRange.value.endDate)
-  const diffDays = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-  const totalDays = Math.max(diffDays, 1)
-  const days: Array<{ date: string; cost: number; tokens: number }> = []
-  for (let i = 0; i <= totalDays; i++) {
-    const d = new Date(startDate)
-    d.setDate(d.getDate() + i)
-    const dateStr = d.toISOString().split('T')[0]
-    const dayRecords = filteredRecords.value.filter((r) => r.date === dateStr)
-    days.push({
-      date: dateStr.slice(5).replace('-', '/'),
-      cost: calculateTotalCost(dayRecords),
-      tokens: dayRecords.reduce((s, r) => s + r.inputTokens + r.outputTokens, 0),
-    })
-  }
-  return days
-})
-
-const trendAvgCost = computed(() => {
-  const days = dailyTrend.value
-  return days.length > 0 ? days.reduce((s, d) => s + d.cost, 0) / days.length : 0
-})
-
-const trendChartData = computed(() => {
-  const data = dailyTrend.value
-  return {
-    labels: data.map((d) => d.date),
-    datasets: [
-      {
-        label: '日費用（TWD）',
-        data: data.map((d) => d.cost),
-        borderColor: 'rgba(59, 130, 246, 1)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        borderWidth: 2,
-        pointRadius: data.length > 20 ? 0 : 3,
-        pointHoverRadius: 5,
-        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-        fill: true,
-        tension: 0.3,
-      },
-    ],
-  }
-})
-
-const trendChartOptions = computed(() => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  interaction: { mode: 'index' as const, intersect: false },
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      backgroundColor: tooltipBg.value,
-      titleFont: { size: 11 },
-      bodyFont: { size: 11 },
-      titleColor: '#fff',
-      bodyColor: '#fff',
-      padding: 8,
-      cornerRadius: 6,
-      callbacks: {
-        label: (ctx: any) => `當日費用: ${formatCost(ctx.parsed.y)}`,
-      },
-    },
-  },
-  scales: {
-    x: {
-      grid: { display: false },
-      ticks: { maxRotation: 0, font: { size: 10 }, color: textColor.value, maxTicksLimit: 10 },
-    },
-    y: {
-      beginAtZero: true,
-      grid: { color: gridColor.value },
-      ticks: {
-        font: { size: 10 },
-        color: textColor.value,
-        callback: (value: any) => formatCostCompact(Number(value)),
-      },
-    },
-  },
-}))
-
-watch([dateRange, selectedModels], () => {
-  trendChartKey.value++
-}, { deep: true })
 
 function formatNumber(num: number): string {
   if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'

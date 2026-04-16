@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../pages/Home.vue'
 import DepartmentDetail from '../pages/DepartmentDetail.vue'
-import CostAnalysis from '../pages/CostAnalysis.vue'
 import Login from '../pages/Login.vue'
 import NotFound from '../pages/NotFound.vue'
 import { useAuthStore } from '../stores/auth'
@@ -26,14 +25,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/fee-analysis',
-    name: 'FeeAnalysis',
-    component: CostAnalysis,
-    meta: { requiresAuth: true }
+    path: '/cost-analysis',
+    redirect: '/'
   },
   {
-    path: '/cost-analysis',
-    redirect: '/fee-analysis'
+    path: '/fee-analysis',
+    redirect: '/'
   },
   {
     path: '/:pathMatch(.*)*',
